@@ -1,5 +1,6 @@
 package com.example.yan_c_000.auth;
 
+import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -26,6 +27,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 
@@ -61,6 +64,7 @@ import io.realm.RealmResults;
 public class Navigation extends AppCompatActivity
         implements RemoteToLocalLoader.Callback,  NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback {
     private TextView textView2;
+    private Button buttRefresh;
     private GoogleMap mMap;
     public static final int NUM_GRAPH_POINTS = 2;
     public static int NUM_NOW = 0;
@@ -186,7 +190,8 @@ public class Navigation extends AppCompatActivity
 //        LocalRealmDB.SaveLocations(this,results.get(0),locations);
 
 
-
+        textView2 = (TextView) findViewById(R.id.textView2);
+        buttRefresh= (Button) findViewById(R.id.refresh);
 
 
         // get reference to 'users' node
@@ -209,18 +214,23 @@ public class Navigation extends AppCompatActivity
 
         //LocalRealmDB.FindContact(this,phone);
         if (!contacts_permissions()) ;
-            //sendContats();
+        sendContats();
+
+
+
         if (!runtime_permissions())
             enable_buttons();
         initMap();
 
         SharedPref2 sharedPref2 = new SharedPref2();
+        remoteToLocalLoader = new RemoteToLocalLoader(this,  sharedPref2.GetPref(sharedPref2.APP_PREFERENCES_FBID)  );
         if (sharedPref2.GetPrefBool(sharedPref2.APP_PREFERENCES_NEW_USER_BOOLEAN)){
             //TODO new user or new phone number, delet all info and initialisize from  0
+            remoteToLocalLoader.CheckMyUser();
             sharedPref2.SetPrefBool(sharedPref2.APP_PREFERENCES_NEW_USER_BOOLEAN, false );
         }
 
-        remoteToLocalLoader = new RemoteToLocalLoader(this,  sharedPref2.GetPref(sharedPref2.APP_PREFERENCES_FBID)  );
+
         remoteToLocalLoader.Load();
        // RemoteToLocalLoader.Load(this);
 
@@ -238,7 +248,8 @@ public class Navigation extends AppCompatActivity
 //
 //            }
 //        });
-        textView2 = (TextView) findViewById(R.id.textView2);
+
+
         //getAll(this);
 
 
@@ -501,7 +512,21 @@ public class Navigation extends AppCompatActivity
     }
 
     private void enable_buttons() {
+        buttRefresh.setOnClickListener( new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
 
+                SharedPref2 sharedPref2 = new SharedPref2();
+                remoteToLocalLoader = new RemoteToLocalLoader(Navigation.this,  sharedPref2.GetPref(sharedPref2.APP_PREFERENCES_FBID)  );
+                remoteToLocalLoader.Load();
+
+
+
+
+
+
+
+            }});
     }
 
 

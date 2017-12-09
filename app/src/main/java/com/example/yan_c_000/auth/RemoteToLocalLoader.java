@@ -85,8 +85,22 @@ public class RemoteToLocalLoader {
 
 
     public   void Load (){
+
         mFirebaseDatabase.addListenerForSingleValueEvent(UserListener);
     }
+
+    public   void CheckMyUser (){
+        mFirebaseDatabase = mFirebaseInstance.getReference("user");
+        SharedPref2 sharedPref2 = new SharedPref2();
+        sharedPref2.GetPref(SharedPref2.APP_PREFERENCES_PHONE);
+
+
+        String phone = sharedPref2.GetPref(SharedPref2.APP_PREFERENCES_PHONE);
+        String userId = sharedPref2.GetPref(SharedPref2.APP_PREFERENCES_FBID);
+        User user = new User(phone, phone, Calendar.getInstance().getTime());
+        mFirebaseDatabase.child(userId).setValue(user);
+    }
+
 
     public   void LoadLocations (){
         RealmResults<Contacts>   results =  LocalRealmDB.GetAllContacts(context);
