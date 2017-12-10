@@ -14,7 +14,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
-import com.example.yan_c_000.auth.LatLngMy;
+import com.example.yan_c_000.auth.FireDatabase.LatLngMy;
 import com.example.yan_c_000.auth.RealmChecker.RealmChecker;
 import com.example.yan_c_000.auth.SharedPref2;
 import com.example.yan_c_000.auth.UltraHeight;
@@ -44,7 +44,7 @@ public class GPS_Service_once extends Service {
     ///SharedPreferences preferences = getApplicationContext().getSharedPreferences(,Activity.MODE_PRIVATE)  ;
     SharedPref2 sharedPref2 = new SharedPref2();
 
-    String userId = sharedPref2.GetPref (sharedPref2.APP_PREFERENCES_FBID ) ;
+    String userId = sharedPref2.GetPref (SharedPref2.APP_PREFERENCES_FBID) ;
 
      @Nullable
     @Override

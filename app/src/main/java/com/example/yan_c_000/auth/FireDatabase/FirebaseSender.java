@@ -1,12 +1,9 @@
 package com.example.yan_c_000.auth.FireDatabase;
 
-import com.example.yan_c_000.auth.LatLngMy;
 import com.example.yan_c_000.auth.Realm.LocationRealm;
 import com.example.yan_c_000.auth.SharedPref2;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-
-import java.util.Calendar;
 
 import io.realm.RealmList;
 
@@ -20,7 +17,7 @@ public class FirebaseSender {
    static public void SendLocationsWithoutTimestamp (RealmList<LocationRealm> realmlocations){
        SharedPref2 sharedPref2 = new SharedPref2();
 
-       String userId = sharedPref2.GetPref(sharedPref2.APP_PREFERENCES_FBID);
+       String userId = sharedPref2.GetPref(SharedPref2.APP_PREFERENCES_FBID);
         DatabaseReference mFirebaseDatabase;
         FirebaseDatabase mFirebaseInstance;
        mFirebaseInstance = FirebaseDatabase.getInstance();

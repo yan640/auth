@@ -5,11 +5,8 @@ import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 
-import com.example.yan_c_000.auth.FireDatabase.FirebaseSender;
-import com.example.yan_c_000.auth.SharedPref2;
 import com.google.common.base.Strings;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -31,7 +28,7 @@ public class LocalRealmDB extends Activity {
 
     public static Realm realmInit(Context context){
         Realm realm = null;
-        realm.init(context);
+        Realm.init(context);
         RealmConfiguration realmConfiguration = new RealmConfiguration.Builder().deleteRealmIfMigrationNeeded().build();
         Realm.setDefaultConfiguration(realmConfiguration);
         realm = Realm.getDefaultInstance();
@@ -225,58 +222,58 @@ public class LocalRealmDB extends Activity {
     }
 
 
-    public static void UpdateMyLocations(Context context, final Contacts contact, final ArrayList<LocationRealm> locations) {
-        Realm realm = realmInit(context);
-
-        final RealmList<LocationRealm> locationRealms = GetLocationsAndDelete3dayOld(context, contact);
-        final boolean[] Updated = new boolean[locations.size()];
-        for (int i=0; i<locations.size();i++ ) {
-            final LocationRealm locFB =locations.get(i);
-            for (final LocationRealm locRealm : locationRealms) {
-                if (locFB.getFBkey() == locRealm.getFBkey()) {
-                    realm.executeTransaction(new Realm.Transaction() {
-                        @Override
-                        public void execute(Realm realm) {
-                            locRealm.setFBCreated(locFB.getFBCreated());
-                            if (locFB.getFBUpdated() > 0)
-                                locRealm.setFBUpdated(locFB.getFBUpdated());
-
-                        }
-                    });
-                    Updated[i]=true;
-                }
-
-
-            }
-            if (!Updated[i]==true) Updated[i]=false;
-
-
-        }
-
-
-
-        realm.executeTransaction(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                if (locations.size() > 0) {
-                    for (int i=0; i<locations.size();i++ ) {
-                        if (Updated[i]==false){
-                              LocationRealm locFB2 = locations.get(i);
-                            contact.location.add(locFB2);
-                        }
-
-                    }
-                }
-            }
-        });
-        FirebaseSender.SendLocationsWithoutTimestamp(contact.getLocation());
-
-
-//        realm.beginTransaction();
-//        realm.insert(locations);
-//        realm.commitTransaction();
-
-    }
+//    public static void UpdateMyLocations(Context context, final Contacts contact, final ArrayList<LocationRealm> locations) {
+//        Realm realm = realmInit(context);
+//
+//        final RealmList<LocationRealm> locationRealms = GetLocationsAndDelete3dayOld(context, contact);
+//        final boolean[] Updated = new boolean[locations.size()];
+//        for (int i=0; i<locations.size();i++ ) {
+//            final LocationRealm locFB =locations.get(i);
+//            for (final LocationRealm locRealm : locationRealms) {
+//                if (locFB.getFBkey() == locRealm.getFBkey()) {
+//                    realm.executeTransaction(new Realm.Transaction() {
+//                        @Override
+//                        public void execute(Realm realm) {
+//                            locRealm.setFBCreated(locFB.getFBCreated());
+//                            if (locFB.getFBUpdated() > 0)
+//                                locRealm.setFBUpdated(locFB.getFBUpdated());
+//
+//                        }
+//                    });
+//                    Updated[i]=true;
+//                }
+//
+//
+//            }
+//            if (!Updated[i]==true) Updated[i]=false;
+//
+//
+//        }
+//
+//
+//
+//        realm.executeTransaction(new Realm.Transaction() {
+//            @Override
+//            public void execute(Realm realm) {
+//                if (locations.size() > 0) {
+//                    for (int i=0; i<locations.size();i++ ) {
+//                        if (Updated[i]==false){
+//                              LocationRealm locFB2 = locations.get(i);
+//                            contact.location.add(locFB2);
+//                        }
+//
+//                    }
+//                }
+//            }
+//        });
+//        FirebaseSender.SendLocationsWithoutTimestamp(contact.getLocation());
+//
+//
+////        realm.beginTransaction();
+////        realm.insert(locations);
+////        realm.commitTransaction();
+//
+//    }
 
     public static void GetAllLocations(Context context, final Contacts contact ){
         Log.e(TAG, "contact.getPhone: " + contact.getPhone());

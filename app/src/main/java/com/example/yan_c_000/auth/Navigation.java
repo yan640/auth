@@ -1,6 +1,5 @@
 package com.example.yan_c_000.auth;
 
-import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -16,22 +15,22 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
-import android.support.v4.content.ContextCompat;
-import android.telephony.PhoneNumberUtils;
-import android.util.Log;
 import android.support.design.widget.NavigationView;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.telephony.PhoneNumberUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-
+import com.example.yan_c_000.auth.FireDatabase.FBLocationListener;
 import com.example.yan_c_000.auth.Realm.Contacts;
 import com.example.yan_c_000.auth.Realm.LocalRealmDB;
 import com.example.yan_c_000.auth.Realm.LocationRealm;
@@ -45,6 +44,9 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -52,12 +54,6 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-
-import io.realm.Realm;
-import io.realm.RealmConfiguration;
 import io.realm.RealmList;
 import io.realm.RealmResults;
 
@@ -107,8 +103,8 @@ public class Navigation extends AppCompatActivity
         for (Contacts contacts : results) {
             topChannelMenu.add(contacts.getPhone());
         }
-        if (!contacts_permissions())setAlarm();
 
+        FBLocationListener fbLocationListener = new FBLocationListener(this);
 
     }
 
@@ -118,7 +114,7 @@ public class Navigation extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_navigation);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         mData = UltraHeightSingleton.get(this);
         setSupportActionBar(toolbar);
 //        if  (prefs.getString(Navigation.NAME, "none") == "none") {
@@ -137,13 +133,13 @@ public class Navigation extends AppCompatActivity
 //            }
 //        });
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         menu = navigationView.getMenu();
         mFirebaseInstance = FirebaseDatabase.getInstance();
@@ -190,9 +186,9 @@ public class Navigation extends AppCompatActivity
 //        LocalRealmDB.SaveLocations(this,results.get(0),locations);
 
 
-        textView2 = (TextView) findViewById(R.id.textView2);
-        buttRefresh= (Button) findViewById(R.id.refresh);
-
+        textView2 = findViewById(R.id.textView2);
+        buttRefresh= findViewById(R.id.refresh);
+        setAlarm();
 
         // get reference to 'users' node
 
@@ -223,15 +219,15 @@ public class Navigation extends AppCompatActivity
         initMap();
 
         SharedPref2 sharedPref2 = new SharedPref2();
-        remoteToLocalLoader = new RemoteToLocalLoader(this,  sharedPref2.GetPref(sharedPref2.APP_PREFERENCES_FBID)  );
-        if (sharedPref2.GetPrefBool(sharedPref2.APP_PREFERENCES_NEW_USER_BOOLEAN)){
+        remoteToLocalLoader = new RemoteToLocalLoader(this,  sharedPref2.GetPref(SharedPref2.APP_PREFERENCES_FBID)  );
+        if (sharedPref2.GetPrefBool(SharedPref2.APP_PREFERENCES_NEW_USER_BOOLEAN)){
             //TODO new user or new phone number, delet all info and initialisize from  0
             remoteToLocalLoader.CheckMyUser();
-            sharedPref2.SetPrefBool(sharedPref2.APP_PREFERENCES_NEW_USER_BOOLEAN, false );
+            sharedPref2.SetPrefBool(SharedPref2.APP_PREFERENCES_NEW_USER_BOOLEAN, false );
         }
 
 
-        remoteToLocalLoader.Load();
+
        // RemoteToLocalLoader.Load(this);
 
 
@@ -335,7 +331,7 @@ public class Navigation extends AppCompatActivity
                                         contacts.add(con);
                                         //mFirebaseDatabase.child(userId).child(phone).setValue(con);
                                         SharedPref2 sharedPref2 = new SharedPref2();
-                                        String userFbId = sharedPref2.GetPref(sharedPref2.APP_PREFERENCES_FBID);
+                                        String userFbId = sharedPref2.GetPref(SharedPref2.APP_PREFERENCES_FBID);
                                         mFirebaseDatabase.child(userFbId).child(phone).setValue(con);
                                         //Log.e("contact", jk+" : "+phone);
                                         jk++;
@@ -517,7 +513,7 @@ public class Navigation extends AppCompatActivity
             public void onClick(View view) {
 
                 SharedPref2 sharedPref2 = new SharedPref2();
-                remoteToLocalLoader = new RemoteToLocalLoader(Navigation.this,  sharedPref2.GetPref(sharedPref2.APP_PREFERENCES_FBID)  );
+                remoteToLocalLoader = new RemoteToLocalLoader(Navigation.this,  sharedPref2.GetPref(SharedPref2.APP_PREFERENCES_FBID)  );
                 remoteToLocalLoader.Load();
 
 
@@ -532,7 +528,7 @@ public class Navigation extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
@@ -607,7 +603,7 @@ public class Navigation extends AppCompatActivity
                 .color(Color.BLACK));
 
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }

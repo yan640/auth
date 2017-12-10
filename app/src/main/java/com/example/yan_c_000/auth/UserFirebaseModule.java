@@ -40,10 +40,10 @@ public class UserFirebaseModule {
                 for (DataSnapshot ds : dataSnapshot.getChildren()) {
                     Log.d("", "showData: name: " + ds.getValue(User.class).getName());
                     Log.d("", "showData: getPhone: " + ds.getValue(User.class).getPhone());
-                    Log.d("", "showData: phone_num: " + ds.getValue(User.class).getTimeadd());
+
                     uInfo.setName(dataSnapshot.getValue(User.class).getName()); //set the name
                     uInfo.setPhone(dataSnapshot.getValue(User.class).getPhone()); //set the email
-                    uInfo.setTimeadd(dataSnapshot.getValue(User.class).getTimeadd()); //set the phone_num
+                    //uInfo.setTimeadd(dataSnapshot.getValue(User.class).getTimeadd()); //set the phone_num
 
                 }
 

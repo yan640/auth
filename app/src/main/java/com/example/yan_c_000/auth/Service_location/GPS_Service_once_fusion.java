@@ -10,17 +10,17 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
-import com.example.yan_c_000.auth.LatLngMy;
+import com.example.yan_c_000.auth.FireDatabase.LatLngMy;
 import com.example.yan_c_000.auth.RealmChecker.LocationRealmChecker;
 import com.example.yan_c_000.auth.RealmChecker.RealmChecker;
 import com.example.yan_c_000.auth.SharedPref2;
+import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationRequest;
 import com.google.firebase.database.ServerValue;
 
 import java.util.Calendar;
@@ -42,7 +42,7 @@ public class GPS_Service_once_fusion extends Service {
     ///SharedPreferences preferences = getApplicationContext().getSharedPreferences(,Activity.MODE_PRIVATE)  ;
     SharedPref2 sharedPref2 = new SharedPref2();
 
-    String userId = sharedPref2.GetPref(sharedPref2.APP_PREFERENCES_FBID);
+    String userId = sharedPref2.GetPref(SharedPref2.APP_PREFERENCES_FBID);
 
 
     private final static int LOCATION_REQUEST_INTERVAL_SECONDS = 10;
@@ -65,7 +65,7 @@ public class GPS_Service_once_fusion extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
-
+    //private DatabaseReference mLastLocationDatabase;
     private DatabaseReference mFirebaseDatabase;
     private FirebaseDatabase mFirebaseInstance;
     //private FirebaseAuth mAuth;
@@ -91,7 +91,7 @@ public class GPS_Service_once_fusion extends Service {
         mFirebaseInstance = FirebaseDatabase.getInstance();
        // mFirebaseInstance.setPersistenceEnabled(true);
         mFirebaseDatabase = mFirebaseInstance.getReference("latlng");
-
+       // mLastLocationDatabase = mFirebaseInstance.getReference("LastLocation");
         FusedLocationProviderClient locationProviderClient = getFusedLocationProviderClient();
         LocationRequest locationRequest = LocationRequest.create();
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
@@ -156,7 +156,7 @@ public class GPS_Service_once_fusion extends Service {
                 LatLngMy latlng = new LatLngMy(  lon, lat, accuracy, speed,0);
 
                 mFirebaseDatabase.child(userId).child(LocId).setValue(latlng);
-
+              //  mLastLocationDatabase.child(userId).setValue(latlng);
             }
             else{
                 RealmChecker.UpdateLocationChecker(GPS_Service_once_fusion.this,lastlocation,LocIdLong);
@@ -165,11 +165,16 @@ public class GPS_Service_once_fusion extends Service {
                     mFirebaseDatabase.child(userId).child(String.valueOf(lastlocation.FBkey)).child("lat").setValue(lastlocation.getLat());
                     mFirebaseDatabase.child(userId).child(String.valueOf(lastlocation.FBkey)).child("accuracy").setValue(lastlocation.getAccuracy());
                     mFirebaseDatabase.child(userId).child(String.valueOf(lastlocation.FBkey)).child("speed").setValue(lastlocation.getSpeed());
-
+//                    mLastLocationDatabase.child(userId).child("lon").setValue(lastlocation.getLon());
+//                    mLastLocationDatabase.child(userId).child("lat").setValue(lastlocation.getLat());
+//                    mLastLocationDatabase.child(userId).child("accuracy").setValue(lastlocation.getAccuracy());
+//                    mLastLocationDatabase.child(userId).child("speed").setValue(lastlocation.getSpeed());
                 }
 
                   mFirebaseDatabase.child(userId).child(String.valueOf(lastlocation.FBkey)).child("lastlocaltime").setValue(LocIdLong);
                 mFirebaseDatabase.child(userId).child(String.valueOf(lastlocation.FBkey)).child("timestampCreated").child("TimeLast").setValue(ServerValue.TIMESTAMP);
+//                mLastLocationDatabase.child(userId).child("lastlocaltime").setValue(LocIdLong);
+//                mLastLocationDatabase.child(userId).child("timestampCreated").child("TimeLast").setValue(ServerValue.TIMESTAMP);
             }
             stopSelf();
         }
@@ -179,6 +184,7 @@ public class GPS_Service_once_fusion extends Service {
             LatLngMy latlng = new LatLngMy(  lon, lat, accuracy, speed,0);
 
             mFirebaseDatabase.child(userId).child(LocId).setValue(latlng);
+//            mLastLocationDatabase.child(userId).setValue(latlng);
             i.putExtra("FBkey", "null");
             i.putExtra("distance", "null");
             sendBroadcast(i);

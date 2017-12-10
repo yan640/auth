@@ -1,18 +1,14 @@
-package com.example.yan_c_000.auth;
+package com.example.yan_c_000.auth.FireDatabase;
 
 import com.google.firebase.database.Exclude;
 import com.google.firebase.database.IgnoreExtraProperties;
+import com.google.firebase.database.ServerValue;
+
+import java.util.HashMap;
 
 /**
  * Created by yan-c_000 on 26.10.2017.
  */
-
-
-import com.google.firebase.database.IgnoreExtraProperties;
-import com.google.firebase.database.ServerValue;
-
-import java.util.Date;
-import java.util.HashMap;
 
 /**
  * Created by Ravi Tamada on 07/10/16.
@@ -22,8 +18,11 @@ import java.util.HashMap;
 @IgnoreExtraProperties
 public class LatLngMy {
 
-    public Date time;
+    //public Date time;
     public long lastlocaltime;
+
+
+
     HashMap<String, Object> timestampCreated;
 
     public long getlastlocaltime() {
@@ -34,9 +33,9 @@ public class LatLngMy {
         lastlocaltime = lastlocaltime;
     }
 
-    public Date getTime() {
-        return time;
-    }
+//    public Date getTime() {
+//        return time;
+//    }
 
     public double getLon() {
         return lon;
@@ -67,9 +66,9 @@ public class LatLngMy {
     }
 
     public double accuracy;
-    public void setTime(Date time) {
-        this.time = time;
-    }
+//    public void setTime(Date time) {
+//        this.time = time;
+//    }
 
     public void setLon(double lon) {
         this.lon = lon;

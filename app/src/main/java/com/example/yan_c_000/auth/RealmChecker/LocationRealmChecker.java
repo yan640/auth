@@ -15,6 +15,15 @@ public class LocationRealmChecker extends RealmObject {
 
     public long FBkey;
     public long FBTimeStamp;
+
+    public long getFBUpdated() {
+        return FBUpdated;
+    }
+
+    public void setFBUpdated(long FBUpdated) {
+        this.FBUpdated = FBUpdated;
+    }
+
     public long FBUpdated;
 
     public double lon;
