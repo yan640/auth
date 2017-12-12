@@ -78,6 +78,14 @@ public class FBLocationListener {
             //Log.e(TAG, "onChildAdded for cont  "+ reff  +" size: "+dataSnapshot.getChildrenCount()  );
             long FBkey=(Calendar.getInstance().getTimeInMillis());
 
+            Log.e(TAG, "ref"+ ref    );
+            Log.e(TAG, "onChildAdded    UserFBkey  "+ UserFBkey+" LocationFbkey   "+ LocationFbkey+" size: "+dataSnapshot.toString() );
+//            try {
+//
+//            } catch (
+//                    Log.e(TAG, "onChildAdded     We find  for cont  "+ UserFBkey+" size: "+dataSnapshot.getChildrenCount()+" time:  "+ss );
+//                    )
+//
 
 
                 LocationRealm locationRealm = new LocationRealm();
@@ -110,7 +118,8 @@ public class FBLocationListener {
             //Log.e(TAG, "onChildAdded for cont  "+ reff  +" size: "+dataSnapshot.getChildrenCount()  );
             long FBkey=(Calendar.getInstance().getTimeInMillis());
 
-
+            Log.e(TAG, "ref"+ ref    );
+            Log.e(TAG, "onChildChanged    UserFBkey  "+ UserFBkey+" LocationFbkey   "+ LocationFbkey+" size: "+dataSnapshot.toString() );
 
             LocationRealm locationRealm = new LocationRealm();
             locationRealm.setLat(dataSnapshot.getValue(LatLngMy.class).getLat());

@@ -142,9 +142,11 @@ public class Navigation extends AppCompatActivity
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         menu = navigationView.getMenu();
+       // mFirebaseInstance.setPersistenceEnabled(true);
         mFirebaseInstance = FirebaseDatabase.getInstance();
-        mFirebaseInstance.setPersistenceEnabled(true);
-//        FireRefLat = mFirebaseInstance.getReference("latlng");
+
+//         FireRefLat = mFirebaseInstance.getReference("latlng/ftFnDRa6HOe8xNiEQ1xb3fH7ALt2");
+//        FireRefLat.removeValue( );
 //        mFirebaseDatabase = mFirebaseInstance.getReference("user");
 //        mAuth = FirebaseAuth.getInstance();
 //        FirebaseUser currentUser = mAuth.getCurrentUser();
