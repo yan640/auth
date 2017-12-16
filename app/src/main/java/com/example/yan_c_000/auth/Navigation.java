@@ -667,7 +667,8 @@ public class Navigation extends AppCompatActivity
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
-        menu.findItem(lastNavigationItemId).setChecked(false);
+        MenuItem last =menu.getItem(lastNavigationItemId);
+        last.setChecked(false);
         lastNavigationItemId = item.getItemId();
 
         CurrentCont = getMenuItemTag(item);
@@ -681,33 +682,39 @@ public class Navigation extends AppCompatActivity
         setTitle(item.getTitle());
         mMap.clear();
        // List<MarkerOptions> markers = new
-        for (int i = 0; i < locationRealms.size(); i++) {
-            LocationRealm loc = locationRealms.get(i);
-            String time= getTimeFromRealm(loc);
-            LatLng endLatLng = new LatLng(loc.getLat(), loc.getLon());
-            poly.add(endLatLng);
+        int sd = locationRealms.size();
 
 
-            if ((locationRealms.size()-1)==i) {
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(endLatLng, 12));
-                marker=mMap.addMarker(new MarkerOptions()
-                        .position(endLatLng)
-                        .alpha((float) 1)
-                        .title(time));
+        if (locationRealms.size() > 0) {
+            //for (LocationRealmChecker lrm : results) {
+            for (int i = (locationRealms.size() - 1); i > 0 && i > sd - 15; i--) {
+
+                LocationRealm loc = locationRealms.get(i);
+                String time = getTimeFromRealm(loc);
+                LatLng endLatLng = new LatLng(loc.getLat(), loc.getLon());
+                poly.add(endLatLng);
 
 
-               // textView2.append("\n"+"if"+loc.getLat() +" "+ loc.getLon() +" "+ loc.getFBkey());
-            } else {
+                if ((locationRealms.size() - 1) == i) {
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(endLatLng, 12));
+                    marker = mMap.addMarker(new MarkerOptions()
+                            .position(endLatLng)
+                            .alpha((float) 1)
+                            .title(time));
 
 
-                  marker=mMap.addMarker(new MarkerOptions()
-                        .position(endLatLng)
-                        .alpha((float) 0.2)
-                        .title(time));
+                    // textView2.append("\n"+"if"+loc.getLat() +" "+ loc.getLon() +" "+ loc.getFBkey());
+                } else {
 
-               // textView2.append("\n"+"else"+loc.getLat() +" "+ loc.getLon() +" "+loc.getFBkey());
+
+                    marker = mMap.addMarker(new MarkerOptions()
+                            .position(endLatLng)
+                            .alpha((float) 0.2)
+                            .title(time));
+
+                    // textView2.append("\n"+"else"+loc.getLat() +" "+ loc.getLon() +" "+loc.getFBkey());
+                }
             }
-
 
         }
 

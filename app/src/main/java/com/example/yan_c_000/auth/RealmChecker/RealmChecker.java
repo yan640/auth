@@ -6,9 +6,12 @@ import android.os.Bundle;
 import android.util.Log;
 
 import com.example.yan_c_000.auth.FireDatabase.FirebaseSender;
+import com.example.yan_c_000.auth.FireDatabase.LatLngMy;
 import com.example.yan_c_000.auth.Realm.Contacts;
 import com.example.yan_c_000.auth.Realm.LocalRealmDB;
 import com.example.yan_c_000.auth.Realm.LocationRealm;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -102,6 +105,24 @@ public class RealmChecker extends Activity {
 
     }
 
+    public static void FindLocationCheckerElementAndUpdateTimestamp(Context context, long FBkey,final  long FBTimeStamp,final  long FBUpdated) {
+        Realm realm = realmInit(context);
+        final RealmResults<LocationRealmChecker> results = realm.where(LocationRealmChecker.class).equalTo("FBkey", FBkey).findAll();
+        if (results.size()>0){
+            realm.executeTransaction(new Realm.Transaction() {
+                @Override
+                public void execute(Realm realm) {
+                    results.get(0).setFBTimeStamp(FBTimeStamp);
+                    if (FBUpdated>0)                     results.get(0).setFBUpdated(FBUpdated);
+
+                }
+            });
+        }
+
+
+
+    }
+
     public static void CreateLocationChecker(Context context,  final long FBkey, final double lon,final double lat,final double accuracy,final double speed) {
 
         Realm realm = realmInit(context);
@@ -136,38 +157,65 @@ public class RealmChecker extends Activity {
 
 
 
-    public static void UpdateMyLocations(Context context, final Contacts contact, final ArrayList<LocationRealm> locations ) {
+    public static void UpdateMyLocations(final Context context,   final ArrayList<LocationRealm> locations , String userId) {
         SimpleDateFormat formating = new SimpleDateFormat("HH:mm:ss.SS");
         Realm realm = realmInit(context);
-        long FBkey= Calendar.getInstance().getTimeInMillis();
-        final RealmResults<LocationRealmChecker> locationRealms =  FindLastLocationsChecker(context,FBkey);
-        //final RealmList<LocationRealm> locationRealms =      GetLocationsAndDelete3dayOld(context, contact);
-        for (final LocationRealm lr : locations){
-            if (!(lr==null) && !(lr.getFBkey()==0)  ) {
-                final RealmResults<LocationRealmChecker> results = realm.where(LocationRealmChecker.class).equalTo("FBkey", lr.getFBkey()).findAll();
-                if (results.size()==1){
-                    Log.d(TAG, "All good, we find one location  " + lr.getFBkey());
-                    realm.executeTransaction(new Realm.Transaction() {
-                        @Override
-                        public void execute(Realm realm) {
-                            results.get(0).setFBTimeStamp(lr.getFBCreated());
-                            if (lr.getFBUpdated() > 0)
-                                results.get(0).setFBUpdated(lr.getFBUpdated());
+        long LocIdLong = Calendar.getInstance().getTimeInMillis();
+        //String LocId = String.valueOf(LocIdLong);
+        for (final LocationRealm lr : locations) {
+            FindLocationCheckerElementAndUpdateTimestamp(context,lr.getFBkey(),lr.getFBCreated(),lr.getFBUpdated());
+        }
+          DatabaseReference mFirebaseDatabase;
+          FirebaseDatabase mFirebaseInstance;
+        mFirebaseInstance = FirebaseDatabase.getInstance();
+        // mFirebaseInstance.setPersistenceEnabled(true);
+        mFirebaseDatabase = mFirebaseInstance.getReference("latlng");
 
-                        }
-                    });
+        RealmResults<LocationRealmChecker> results=FindLastLocationsChecker(  context,    LocIdLong);
+        int sd = results.size();
+        //TODO OFFSET
+        if (results.size()>0){
+            for (int i = results.size() - 1; i >0 && i > sd - 5; i--) {
+                if(results.get(i).getTimeLast()>0 &&  !(results.get(i).getFBUpdated()>0) ){
+
+                }else if (!(results.get(i).getFBTimeStamp()>0)){
+                    LatLngMy latlng = new LatLngMy(  lon, lat, accuracy, speed,0);
+                    mFirebaseDatabase.child(userId).child( String.valueOf( results.get(i).getFBkey() )).setValue(latlng);
                 }
-                else if (results.size()==0) Log.d(TAG, "We didn't find in LocationRealmChecker " + lr.getFBkey());
-                else  Log.d(TAG, "We   find in LocationRealmChecker  to  much with FBkey !!!! ;  " + lr.getFBkey());
             }
-
-
         }
 
-        RealmResults<LocationRealmChecker> resupdated = FindLastLocationsChecker(  context,    FBkey);
-        for (LocationRealmChecker ru : resupdated){
-            if (ru.getFBTimeStamp()==0) Log.d(TAG, "We   find location in LocationRealmChecker  without timestamp ;  " +formating.format( ru.getFBkey()));
-        }
+
+
+//        long FBkey= Calendar.getInstance().getTimeInMillis();
+//        final RealmResults<LocationRealmChecker> locationRealms =  FindLastLocationsChecker(context,FBkey);
+//        //final RealmList<LocationRealm> locationRealms =      GetLocationsAndDelete3dayOld(context, contact);
+//        for (final LocationRealm lr : locations){
+//            if (!(lr==null) && !(lr.getFBkey()==0)  ) {
+//                final RealmResults<LocationRealmChecker> results = realm.where(LocationRealmChecker.class).equalTo("FBkey", lr.getFBkey()).findAll();
+//                if (results.size()==1){
+//                    Log.d(TAG, "All good, we find one location  " + lr.getFBkey());
+//                    realm.executeTransaction(new Realm.Transaction() {
+//                        @Override
+//                        public void execute(Realm realm) {
+//                            results.get(0).setFBTimeStamp(lr.getFBCreated());
+//                            if (lr.getFBUpdated() > 0)
+//                                results.get(0).setFBUpdated(lr.getFBUpdated());
+//
+//                        }
+//                    });
+//                }
+//                else if (results.size()==0) Log.d(TAG, "We didn't find in LocationRealmChecker " + lr.getFBkey());
+//                else  Log.d(TAG, "We   find in LocationRealmChecker  to  much with FBkey !!!! ;  " + lr.getFBkey());
+//            }
+//
+//
+//        }
+//
+//        RealmResults<LocationRealmChecker> resupdated = FindLastLocationsChecker(  context,    FBkey);
+//        for (LocationRealmChecker ru : resupdated){
+//            if (ru.getFBTimeStamp()==0) Log.d(TAG, "We   find location in LocationRealmChecker  without timestamp ;  " +formating.format( ru.getFBkey()));
+//        }
 
 
 //        final boolean[] Updated = new boolean[locations.size()];
@@ -210,7 +258,7 @@ public class RealmChecker extends Activity {
 //                }
 //            }
 //        });
-        FirebaseSender.SendLocationsWithoutTimestamp(contact.getLocation());
+//        FirebaseSender.SendLocationsWithoutTimestamp(contact.getLocation());
 
 
 //        realm.beginTransaction();

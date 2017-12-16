@@ -164,8 +164,8 @@ public class RemoteToLocalLoader {
                            // }
 
                         }
-                        if (myFBuserid.equals(contact.getKey()))
-                            RealmChecker.UpdateMyLocations(context, contact, locations);
+//                        if (myFBuserid.equals(contact.getKey()))
+//                            RealmChecker.UpdateMyLocations(context, contact, locations);
                         LocalRealmDB.SaveLocations(context, contact, locations);
 
                         int j = i - 1;
@@ -193,6 +193,57 @@ public class RemoteToLocalLoader {
 //            }
         }
     }
+
+    private void LoadMyLast5Locations(final RealmResults<Contacts> results, final int u, final String TwoDaysBeforeNow, final String Now) {
+
+        FirebaseDatabase mFirebaseInstance;
+        mFirebaseInstance = FirebaseDatabase.getInstance();
+        DatabaseReference FireRefLat = mFirebaseInstance.getReference("latlng");
+        //FireRefLat.child(contact.getKey()).limitToFirst(10).addValueEventListener(new ValueEventListener() {
+        SharedPref2 sharedPref2 = new SharedPref2();
+
+        final String userId = sharedPref2.GetPref(SharedPref2.APP_PREFERENCES_FBID);
+
+
+        FireRefLat.child(userId).orderByKey().limitToLast(5).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                // This method is called once with the initial value and again
+                // whenever data at this location is updated.
+                ArrayList<LocationRealm> locations = new ArrayList<LocationRealm>();
+
+                for (DataSnapshot ds : dataSnapshot.getChildren()) {
+                    //if (!(ds==null) && !(ds.getValue(LatLngMy.class).getLat()==null) && !(ds.getKey()==null) && !(ds.getKey()==null) && !(ds.getKey()==null) &&  !(ds.getKey()==null) ) {
+                    LocationRealm locationRealm = new LocationRealm();
+
+                    locationRealm.setFBkey(Long.parseLong(ds.getKey()));
+
+                    if (ds.getValue(LatLngMy.class).getTimestampLastLong() > 0)
+                        locationRealm.setFBUpdated(ds.getValue(LatLngMy.class).getTimestampLastLong());
+
+                    locationRealm.setFBCreated(ds.getValue(LatLngMy.class).getTimestampCreatedLong());
+
+                    //ds.getValue(ServerValue.TIMESTAMP);
+                    locations.add(locationRealm);
+                    // }
+
+                }
+                RealmChecker.UpdateMyLocations(context, locations,userId);
+
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+
+
+
+
 
 
 }
