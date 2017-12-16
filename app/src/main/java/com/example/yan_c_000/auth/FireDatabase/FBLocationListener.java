@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.example.yan_c_000.auth.Realm.Contacts;
+import com.example.yan_c_000.auth.Realm.LocalRealmDB;
 import com.example.yan_c_000.auth.Realm.LocationRealm;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
@@ -31,9 +32,21 @@ public class FBLocationListener {
     Context context;
     public static final String TAG = FBLocationListener.class.getName();
     SimpleDateFormat formating = new SimpleDateFormat("MM:dd:HH:mm:ss.SS");
+    public interface Callback{
+        void FBLocationListenerCallBack(String phone );
+        void FBLocationListenerCallBackNewLocation(String phone );
+    }
+
+    public  Callback callback;
+
+
+
+
     public FBLocationListener(Context mcontext ) {
         context=mcontext;
-
+        if (context instanceof  Callback) {
+            this.callback = ( Callback) context;
+        }
 
         mFirebaseInstance = FirebaseDatabase.getInstance();
         mFirebaseDatabase = mFirebaseInstance.getReference("latlng");
@@ -43,14 +56,24 @@ public class FBLocationListener {
     }
 
     public void Listen(){
-        long now =  Calendar.getInstance().getTimeInMillis() ;
+        String now =  String.valueOf(Calendar.getInstance().getTimeInMillis() );
 
 
         RealmResults<Contacts> contacts= GetAllContacts (  context);
+
         for (Contacts cont : contacts){
-            if (!(cont.getKey()==null && !(cont.getKey().isEmpty()))) {
+            if (!(cont.getKey()==null && !(cont.getKey().isEmpty())) ) {
+                if (!(cont.location.isEmpty()) && !(cont.location.last()==null) && !(cont.location.last().getFBkey()==0)) {
+                    String last = String.valueOf(cont.location.last().getFBkey()-1);
+                    Log.e(TAG, "find last FBkey for cont   " +   cont.getKey() );
+                    mFirebaseDatabase.child(cont.getKey()).orderByKey().startAt(last).addChildEventListener(LastLocationListener);
+                }
+                else {
+                    Log.e(TAG, "didn't find last FBkey for cont   " +   cont.getKey()     );
+                    mFirebaseDatabase.child(cont.getKey()).limitToLast(2).addChildEventListener(LastLocationListener);
+                }
                 //if (!(cont.location.last()==null) &&  cont.location.last().getFBkey()>0 ) now = cont.location.last().getFBkey();
-                mFirebaseDatabase.child(cont.getKey()).addChildEventListener(LastLocationListener);
+
             }
 //            mFirebaseDatabase.child( cont.getKey()).orderByKey().startAt(now) .addValueEventListener(LocationListener);
 //            mLastLocationDatabase.child( cont.getKey()).addChildEventListener().addValueEventListener(LastLocationListener);
@@ -65,7 +88,7 @@ public class FBLocationListener {
 
     }
 
-    private final ChildEventListener LastLocationListener = new  ChildEventListener(){
+    public final ChildEventListener LastLocationListener = new  ChildEventListener(){
 
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String previousChildName) {
@@ -80,29 +103,45 @@ public class FBLocationListener {
 
             Log.e(TAG, "ref"+ ref    );
             Log.e(TAG, "onChildAdded    UserFBkey  "+ UserFBkey+" LocationFbkey   "+ LocationFbkey+" size: "+dataSnapshot.toString() );
-//            try {
-//
-//            } catch (
-//                    Log.e(TAG, "onChildAdded     We find  for cont  "+ UserFBkey+" size: "+dataSnapshot.getChildrenCount()+" time:  "+ss );
-//                    )
-//
+            try {
+                if (!(dataSnapshot.getRef().getKey().isEmpty())
+                        && !(dataSnapshot.getRef().getKey() == null)
+                        && Long.parseLong(dataSnapshot.getRef().getKey()) > 1012567391
+                        && !(UserFBkey == null)
+
+                        ) {
+
+                    LocationRealm locationRealm = new LocationRealm();
+                    locationRealm.setLat(dataSnapshot.getValue(LatLngMy.class).getLat());
+                    locationRealm.setLon(dataSnapshot.getValue(LatLngMy.class).getLon());
+                    locationRealm.setAccuracy(dataSnapshot.getValue(LatLngMy.class).getAccuracy());
+                    locationRealm.setSpeed(dataSnapshot.getValue(LatLngMy.class).getSpeed());
+                    locationRealm.setFBkey(Long.parseLong(dataSnapshot.getRef().getKey()));
+                    if (dataSnapshot.getValue(LatLngMy.class).getlastlocaltime() > 0)
+                        locationRealm.setLocaltimeupdate(dataSnapshot.getValue(LatLngMy.class).getlastlocaltime());
+                    if (dataSnapshot.getValue(LatLngMy.class).getTimestampLastLong() > 0)
+                        locationRealm.setFBUpdated(dataSnapshot.getValue(LatLngMy.class).getTimestampLastLong());
+
+                    locationRealm.setFBCreated(dataSnapshot.getValue(LatLngMy.class).getTimestampCreatedLong());
+                    long ss = Calendar.getInstance().getTimeInMillis() - locationRealm.getFBCreated();
+                    LocalRealmDB.UpdateLastLocationForContact(context, ref.getParent().getKey(), locationRealm);
+                    String phone =LocalRealmDB.UpdateLastLocationForContact(context, ref.getParent().getKey(), locationRealm);
+
+                    Log.e(TAG, "onChildAdded     We find  for cont  "+ UserFBkey+" size: "+dataSnapshot.getChildrenCount()+" time:  "+ss );
+                    if (!(phone.isEmpty())){
+                        callback.FBLocationListenerCallBackNewLocation( phone);
+                    }
 
 
-                LocationRealm locationRealm = new LocationRealm();
-                locationRealm.setLat(dataSnapshot.getValue(LatLngMy.class).getLat());
-                locationRealm.setLon(dataSnapshot.getValue(LatLngMy.class).getLon());
-                locationRealm.setAccuracy(dataSnapshot.getValue(LatLngMy.class).getAccuracy());
-                locationRealm.setSpeed(dataSnapshot.getValue(LatLngMy.class).getSpeed());
-                locationRealm.setFBkey(Long.parseLong(dataSnapshot.  getRef().getKey()));
-                if (dataSnapshot.getValue(LatLngMy.class).getlastlocaltime() > 0)
-                    locationRealm.setLocaltimeupdate(dataSnapshot.getValue(LatLngMy.class).getlastlocaltime());
-                if (dataSnapshot.getValue(LatLngMy.class).getTimestampLastLong() > 0)
-                    locationRealm.setFBUpdated(dataSnapshot.getValue(LatLngMy.class).getTimestampLastLong());
+                }
 
-                locationRealm.setFBCreated(dataSnapshot.getValue(LatLngMy.class).getTimestampCreatedLong());
-                long ss= Calendar.getInstance().getTimeInMillis()-  locationRealm.getFBCreated();
-                Log.e(TAG, "onChildAdded     We find  for cont  "+ UserFBkey+" size: "+dataSnapshot.getChildrenCount()+" time:  "+ss );
-                FBkey = locationRealm.getFBkey();
+
+            } catch (NullPointerException e) {
+                Log.e(TAG, "onChildAdded   NullPointerException");
+            }
+
+
+
 
 
            // if (dataSnapshot.getChildrenCount() >0) ResetListener(dataSnapshot.getRef().getKey(),FBkey);
@@ -114,28 +153,48 @@ public class FBLocationListener {
             //not supportDatabaseReference ref  = dataSnapshot.getRef();
             DatabaseReference ref  = dataSnapshot.getRef();
             String LocationFbkey = ref.getKey() ;
-            String UserFBkey = ref.getParent().getKey().toString();
+            String UserFBkey = ref.getParent().getKey() ;
             //Log.e(TAG, "onChildAdded for cont  "+ reff  +" size: "+dataSnapshot.getChildrenCount()  );
             long FBkey=(Calendar.getInstance().getTimeInMillis());
 
             Log.e(TAG, "ref"+ ref    );
             Log.e(TAG, "onChildChanged    UserFBkey  "+ UserFBkey+" LocationFbkey   "+ LocationFbkey+" size: "+dataSnapshot.toString() );
+            try {
+                if (!(dataSnapshot.getRef().getKey().isEmpty())
+                        && !(dataSnapshot.getRef().getKey() == null)
+                        && Long.parseLong(dataSnapshot.getRef().getKey()) > 1012567391
+                        && !(UserFBkey == null)
 
-            LocationRealm locationRealm = new LocationRealm();
-            locationRealm.setLat(dataSnapshot.getValue(LatLngMy.class).getLat());
-            locationRealm.setLon(dataSnapshot.getValue(LatLngMy.class).getLon());
-            locationRealm.setAccuracy(dataSnapshot.getValue(LatLngMy.class).getAccuracy());
-            locationRealm.setSpeed(dataSnapshot.getValue(LatLngMy.class).getSpeed());
-            locationRealm.setFBkey(Long.parseLong(dataSnapshot.getRef().getKey()));
-            if (dataSnapshot.getValue(LatLngMy.class).getlastlocaltime() > 0)
-                locationRealm.setLocaltimeupdate(dataSnapshot.getValue(LatLngMy.class).getlastlocaltime());
-            if (dataSnapshot.getValue(LatLngMy.class).getTimestampLastLong() > 0)
-                locationRealm.setFBUpdated(dataSnapshot.getValue(LatLngMy.class).getTimestampLastLong());
+                        ) {
 
-            locationRealm.setFBCreated(dataSnapshot.getValue(LatLngMy.class).getTimestampCreatedLong());
-            long ss= Calendar.getInstance().getTimeInMillis()-  locationRealm.getFBCreated();
-            Log.e(TAG, "onChildChanged   We find  for cont  "+ UserFBkey+" size: "+dataSnapshot.getChildrenCount()+" time:  "+ss );
-            FBkey = locationRealm.getFBkey();
+                    LocationRealm locationRealm = new LocationRealm();
+                    locationRealm.setLat(dataSnapshot.getValue(LatLngMy.class).getLat());
+                    locationRealm.setLon(dataSnapshot.getValue(LatLngMy.class).getLon());
+                    locationRealm.setAccuracy(dataSnapshot.getValue(LatLngMy.class).getAccuracy());
+                    locationRealm.setSpeed(dataSnapshot.getValue(LatLngMy.class).getSpeed());
+                    locationRealm.setFBkey(Long.parseLong(dataSnapshot.getRef().getKey()));
+                    if (dataSnapshot.getValue(LatLngMy.class).getlastlocaltime() > 0)
+                        locationRealm.setLocaltimeupdate(dataSnapshot.getValue(LatLngMy.class).getlastlocaltime());
+                    if (dataSnapshot.getValue(LatLngMy.class).getTimestampLastLong() > 0)
+                        locationRealm.setFBUpdated(dataSnapshot.getValue(LatLngMy.class).getTimestampLastLong());
+
+                    locationRealm.setFBCreated(dataSnapshot.getValue(LatLngMy.class).getTimestampCreatedLong());
+                    long ss = Calendar.getInstance().getTimeInMillis() - locationRealm.getFBCreated();
+                    String phone =LocalRealmDB.UpdateLastLocationForContact(context, ref.getParent().getKey(), locationRealm);
+
+                    Log.e(TAG, "onChildChanged   We find  for cont  " + UserFBkey + " size: " + dataSnapshot.getChildrenCount() + " time:  " + ss);
+                    if (!(phone.isEmpty())){
+                        callback.FBLocationListenerCallBack( phone);
+                    }
+
+                }
+
+
+            } catch (NullPointerException e) {
+                Log.e(TAG, "onChildChanged   NullPointerException");
+            }
+
+
 
         }
 
@@ -156,7 +215,7 @@ public class FBLocationListener {
         }
     };
 
-    private final ValueEventListener LocationListener = new  ValueEventListener(){
+    public final ValueEventListener LocationListener = new  ValueEventListener(){
 
         @Override
         public void onDataChange(DataSnapshot dataSnapshot) {
@@ -166,7 +225,7 @@ public class FBLocationListener {
             DatabaseReference ref  = dataSnapshot.getRef();
             String reff = ref.getKey() ;
             String ps = ref.getParent().toString();
-            Log.e(TAG, "onDataChange for cont  "+ reff  +" size: "+dataSnapshot.getChildrenCount()  );
+            Log.e(TAG, "onDataChange for cont  "+ reff  +" size: "+dataSnapshot.getChildrenCount() +dataSnapshot.toString() );
             long FBkey=(Calendar.getInstance().getTimeInMillis());
             for (DataSnapshot ds : dataSnapshot.getChildren()) {
 

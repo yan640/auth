@@ -148,30 +148,35 @@ public class GPS_Service_once_fusion extends Service {
 
             long acc = (long) sumaccarcy;
 
-            i.putExtra("distance", "dist"+distance+"Accu"+acc);
-            sendBroadcast(i);
+//            i.putExtra("distance", "dist"+distance+"Accu"+acc);
+//            sendBroadcast(i);
             if (distance>sumaccarcy){
                 RealmChecker.CreateLocationChecker(GPS_Service_once_fusion.this, LocIdLong, lon, lat, accuracy, speed);
 
                 LatLngMy latlng = new LatLngMy(  lon, lat, accuracy, speed,0);
-
+                Log.e(TAG, "send class latlng 1"     );
                 mFirebaseDatabase.child(userId).child(LocId).setValue(latlng);
               //  mLastLocationDatabase.child(userId).setValue(latlng);
             }
             else{
                 RealmChecker.UpdateLocationChecker(GPS_Service_once_fusion.this,lastlocation,LocIdLong);
                 if (!(lastlocation.getFBTimeStamp()>0)) {
+                    Log.e(TAG, "send lon"     );
                     mFirebaseDatabase.child(userId).child(String.valueOf(lastlocation.FBkey)).child("lon").setValue(lastlocation.getLon());
+                    Log.e(TAG, "send lat"     );
                     mFirebaseDatabase.child(userId).child(String.valueOf(lastlocation.FBkey)).child("lat").setValue(lastlocation.getLat());
+                    Log.e(TAG, "send accuracy"     );
                     mFirebaseDatabase.child(userId).child(String.valueOf(lastlocation.FBkey)).child("accuracy").setValue(lastlocation.getAccuracy());
+                    Log.e(TAG, "send speed"     );
                     mFirebaseDatabase.child(userId).child(String.valueOf(lastlocation.FBkey)).child("speed").setValue(lastlocation.getSpeed());
 //                    mLastLocationDatabase.child(userId).child("lon").setValue(lastlocation.getLon());
 //                    mLastLocationDatabase.child(userId).child("lat").setValue(lastlocation.getLat());
 //                    mLastLocationDatabase.child(userId).child("accuracy").setValue(lastlocation.getAccuracy());
 //                    mLastLocationDatabase.child(userId).child("speed").setValue(lastlocation.getSpeed());
                 }
-
+                Log.e(TAG, "send lastlocaltime"     );
                   mFirebaseDatabase.child(userId).child(String.valueOf(lastlocation.FBkey)).child("lastlocaltime").setValue(LocIdLong);
+                Log.e(TAG, "send TimeLast"     );
                 mFirebaseDatabase.child(userId).child(String.valueOf(lastlocation.FBkey)).child("timestampCreated").child("TimeLast").setValue(ServerValue.TIMESTAMP);
 //                mLastLocationDatabase.child(userId).child("lastlocaltime").setValue(LocIdLong);
 //                mLastLocationDatabase.child(userId).child("timestampCreated").child("TimeLast").setValue(ServerValue.TIMESTAMP);
@@ -182,12 +187,12 @@ public class GPS_Service_once_fusion extends Service {
             RealmChecker.CreateLocationChecker(GPS_Service_once_fusion.this, LocIdLong, lon, lat, accuracy, speed);
 
             LatLngMy latlng = new LatLngMy(  lon, lat, accuracy, speed,0);
-
+            Log.e(TAG, "send class latlng 2"     );
             mFirebaseDatabase.child(userId).child(LocId).setValue(latlng);
 //            mLastLocationDatabase.child(userId).setValue(latlng);
-            i.putExtra("FBkey", "null");
-            i.putExtra("distance", "null");
-            sendBroadcast(i);
+//            i.putExtra("FBkey", "null");
+//            i.putExtra("distance", "null");
+//            sendBroadcast(i);
             stopSelf();
         }
 

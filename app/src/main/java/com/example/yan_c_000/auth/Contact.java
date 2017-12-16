@@ -9,16 +9,27 @@ import com.google.firebase.database.IgnoreExtraProperties;
 public class Contact{
     public String name ;
     public String phone ;
+    public String phonefull ;
     public int id;
+
+    public String getPhonefull() {
+        return phonefull;
+    }
+
+    public void setPhonefull(String phonefull) {
+        this.phonefull = phonefull;
+    }
+
     public String idFireAuth ;
     public boolean allowed;
 
     public Contact() {
     }
 
-    public Contact(String name, String phone, int id, String idFireAuth , boolean allowed) {
+    public Contact(String name, String phone,String phonefull,  int id, String idFireAuth , boolean allowed) {
         this.name = name;
         this.phone = phone;
+        this.phonefull = phonefull;
         this.id = id;
         this.idFireAuth = idFireAuth;
         this.allowed = allowed;

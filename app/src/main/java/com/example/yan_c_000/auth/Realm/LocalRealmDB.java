@@ -151,6 +151,76 @@ public class LocalRealmDB extends Activity {
         return results.get(0) ;
 
     }
+    public static void    ChangeContactName(Context context,final Contacts contacts, final String name) {
+        Realm realm = realmInit(context);
+        realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                contacts.setName(name);
+            }
+        });
+
+    }
+
+    public static Contacts   FindContactwithFBkey(Context context, String FBkey) {
+        Realm realm = realmInit(context);
+        RealmResults<Contacts> results = realm.where(Contacts.class).equalTo("key", FBkey).findAll();
+        switch (results.size()){
+            case 0:
+                Log.e(TAG, "doesn't find contact with key: " + FBkey);
+                break;
+            case 1:
+
+                Log.e(TAG, "We find contact with key: " + results.get(0).getKey()+ "with key: " +results.get(0).getName() + results.get(0).getPhone());
+                return results.get(0) ;
+
+            default:
+                Log.e(TAG, "We find contact with key: " + FBkey   + "but we have results.size() = " + results.size());
+                break;
+        }
+        return results.get(0) ;
+
+    }
+
+    public static String     UpdateLastLocationForContact(Context context, String Contactkey, final LocationRealm location ) {
+        Realm realm = realmInit(context);
+        final RealmResults<Contacts> results = realm.where(Contacts.class).equalTo("key", Contactkey).findAll();
+        switch (results.size()){
+            case 0:
+                Log.e(TAG, "doesn't find contact with key: " + Contactkey);
+                break;
+            case 1:
+
+                Log.e(TAG, "We find contact with key: " + results.get(0).getKey() + "with key: " + results.get(0).getName() + results.get(0).getPhone());
+
+                realm.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        if (!(results.get(0).getLocation().isEmpty())) {
+                            LocationRealm lastlocation = results.get(0).getLocation().last();
+
+                            if (!(lastlocation == null) && lastlocation.getFBkey() == location.getFBkey()) {
+
+                                lastlocation.setLocaltimeupdate(location.getLocaltimeupdate());
+                                lastlocation.setFBUpdated(location.getFBUpdated());
+                            } else {
+                                results.get(0).location.add(location);
+                            }
+                        } else {
+                            results.get(0).location.add(location);
+                        }
+
+                    }
+                });
+                return      results.get(0).getPhone();
+
+            default:
+                Log.e(TAG, "We find contact with key: " + Contactkey   + "but we have results.size() = " + results.size());
+                break;
+        }
+
+        return "";
+    }
 
     public static void removeAllContact(Context context) {
         Realm realm = realmInit(context);

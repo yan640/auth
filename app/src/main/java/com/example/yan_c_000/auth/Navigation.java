@@ -42,6 +42,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.firebase.auth.FirebaseAuth;
@@ -53,12 +54,13 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import io.realm.RealmList;
 import io.realm.RealmResults;
 
 public class Navigation extends AppCompatActivity
-        implements RemoteToLocalLoader.Callback,  NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback {
+        implements RemoteToLocalLoader.Callback, FBLocationListener.Callback,  NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback {
     private TextView textView2;
     private Button buttRefresh;
     private GoogleMap mMap;
@@ -93,22 +95,108 @@ public class Navigation extends AppCompatActivity
     ArrayList<Contact> cont = new ArrayList<>();
     public String CurrentCont;
     public RemoteToLocalLoader remoteToLocalLoader;
+    public Marker marker;
+    int lastNavigationItemId=0;
+    Map<MenuItem, String> MenuPhoneSaver = new HashMap<MenuItem, String>();
 
+    public void setMenuItemTag(MenuItem item, String phone)
+    {
+        MenuPhoneSaver.put(item, phone);
+    }
+
+    // returns null if tag has not been set(or was set to null)
+    public String getMenuItemTag(MenuItem item )
+    {
+        return MenuPhoneSaver.get(item);
+    }
 
     @Override
     public void RemoteToLocalLoaderCallingBack( ) {
         RealmResults<Contacts> results = LocalRealmDB.GetAllContacts(this);
         menu.clear();
         topChannelMenu = menu.addSubMenu("Contacts");
+
+        for (Contact c: cont) {
+            for (Contacts contacts : results) {
+                if (c.getPhonefull().equals(contacts.getPhone())) {
+                    Log.e(TAG, "Yes phone equal!!!!!!  " + c.getPhone() + "equal  " + contacts.getPhone());
+                    LocalRealmDB.ChangeContactName(this, contacts,c.getName());
+
+
+
+                }
+
+            }
+
+        }
+
         for (Contacts contacts : results) {
-            topChannelMenu.add(contacts.getPhone());
+            SharedPref2 sharedPref2 = new SharedPref2();
+
+            if (sharedPref2.GetPref(SharedPref2.APP_PREFERENCES_PHONE).equals(contacts.getPhone())) {
+                LocalRealmDB.ChangeContactName(this,contacts, "My Location");
+            }
+
+            setMenuItemTag(topChannelMenu.add(contacts.getName()),contacts.getPhone());
+
+
+
+
+
         }
 
         FBLocationListener fbLocationListener = new FBLocationListener(this);
 
     }
 
+    @Override
+    public void FBLocationListenerCallBack(String phone ) {
+        if ((!CurrentCont.isEmpty()) && CurrentCont.equals(phone)){
+          LocationRealm loc =  LocalRealmDB.FindContact(this, phone).location.last();
+            String time= getTimeFromRealm(loc);
+            LatLng endLatLng = new LatLng(loc.getLat(), loc.getLon());
 
+
+
+
+                //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(endLatLng, 12));
+                marker.setTitle(time);
+
+
+                textView2.setText(time);
+
+
+        }
+
+        //topChannelMenu = menu.;
+
+
+    }
+
+
+    @Override
+    public void FBLocationListenerCallBackNewLocation(String phone ) {
+        if ((!CurrentCont.isEmpty()) && CurrentCont.equals(phone)){
+            LocationRealm loc =  LocalRealmDB.FindContact(this, phone).location.last();
+            String time= getTimeFromRealm(loc);
+            LatLng endLatLng = new LatLng(loc.getLat(), loc.getLon());
+
+
+
+
+            //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(endLatLng, 12));
+            marker.setTitle(time);
+
+
+            textView2.setText(time);
+
+
+        }
+
+        //topChannelMenu = menu.;
+
+
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -328,8 +416,10 @@ public class Navigation extends AppCompatActivity
                                     //phones.get(id).get(i).replaceAll("[ -()]","");
                                     String phone = PhoneNumberUtils.formatNumber(phones.get(id).get(i).replaceAll("[ -()]", ""));
                                     if (PhoneNumberUtils.isGlobalPhoneNumber(phone) & phone.length() > 9) {
+                                        String phonefull=phone;
                                         phone = phone.substring(phone.length() - 9, phone.length());
-                                        Contact con = new Contact(cur.getString(cur.getColumnIndex(DISPLAY_NAME)), phone, id, "", false);
+
+                                        Contact con = new Contact(cur.getString(cur.getColumnIndex(DISPLAY_NAME)), phone, phonefull, id, "", false);
                                         contacts.add(con);
                                         //mFirebaseDatabase.child(userId).child(phone).setValue(con);
                                         SharedPref2 sharedPref2 = new SharedPref2();
@@ -564,16 +654,20 @@ public class Navigation extends AppCompatActivity
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
-        int id = item.getItemId();
-        CurrentCont = item.toString();
+        menu.findItem(lastNavigationItemId).setChecked(false);
+        lastNavigationItemId = item.getItemId();
 
-        RealmList<LocationRealm> locationRealms= LocalRealmDB.GetLocations(this,item.toString());
+        CurrentCont = getMenuItemTag(item);
+         item.setChecked(true)  ;
+
+
+        RealmList<LocationRealm> locationRealms= LocalRealmDB.GetLocations(this,CurrentCont);
 
         textView2.setText("");
         List<LatLng> poly = new ArrayList<LatLng>();
-        setTitle(CurrentCont);
+        setTitle(item.getTitle());
         mMap.clear();
-
+       // List<MarkerOptions> markers = new
         for (LocationRealm loc : locationRealms) {
             String time= getTimeFromRealm(loc);
             LatLng endLatLng = new LatLng(loc.getLat(), loc.getLon());
@@ -582,18 +676,21 @@ public class Navigation extends AppCompatActivity
 
             if (locationRealms.last()==loc) {
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(endLatLng, 12));
-                MarkerOptions hh = new MarkerOptions()
+                marker=mMap.addMarker(new MarkerOptions()
                         .position(endLatLng)
                         .alpha((float) 1)
-                        .title(time);
-                mMap.addMarker(hh);
+                        .title(time));
+
+
                 textView2.append("\n"+"if"+loc.getLat() +" "+ loc.getLon() +" "+ loc.getFBkey());
             } else {
-                MarkerOptions hh = new MarkerOptions()
+
+
+                  marker=mMap.addMarker(new MarkerOptions()
                         .position(endLatLng)
                         .alpha((float) 0.2)
-                        .title(time);
-                mMap.addMarker(hh);
+                        .title(time));
+
                 textView2.append("\n"+"else"+loc.getLat() +" "+ loc.getLon() +" "+loc.getFBkey());
             }
 

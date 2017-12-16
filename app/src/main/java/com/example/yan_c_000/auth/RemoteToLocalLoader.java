@@ -25,7 +25,7 @@ import io.realm.RealmResults;
  */
 
 public class RemoteToLocalLoader {
-    private RemoteToLocalCallBack remoteToLocalCallBack;
+     private RemoteToLocalCallBack remoteToLocalCallBack;
     private int i;
     public static final String TAG = LocalRealmDB.class.getName();
     private DatabaseReference mFirebaseDatabase;
