@@ -176,17 +176,30 @@ public class Navigation extends AppCompatActivity
 
     @Override
     public void FBLocationListenerCallBackNewLocation(String phone ) {
-        if ((!CurrentCont.isEmpty()) && CurrentCont.equals(phone)){
-            LocationRealm loc =  LocalRealmDB.FindContact(this, phone).location.last();
-            String time= getTimeFromRealm(loc);
+        if ((!CurrentCont.isEmpty()) && CurrentCont.equals(phone)) {
+            LocationRealm loc = LocalRealmDB.FindContact(this, phone).location.last();
+            String time = getTimeFromRealm(loc);
             LatLng endLatLng = new LatLng(loc.getLat(), loc.getLon());
+            List<LatLng> poly = new ArrayList<LatLng>();
 
 
-
-
+            marker.setAlpha((float) 0.2);
             //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(endLatLng, 12));
-            marker.setTitle(time);
+            LatLng firstLatLng = marker.getPosition();
+            poly.add(firstLatLng);
+            poly.add(endLatLng);
 
+
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(endLatLng, 12));
+            marker = mMap.addMarker(new MarkerOptions()
+                    .position(endLatLng)
+                    .alpha((float) 1)
+                    .title(time));
+
+
+            mMap.addPolyline(new PolylineOptions()
+                    .addAll(poly)
+                    .color(Color.BLACK));
 
             textView2.setText(time);
 
@@ -668,13 +681,14 @@ public class Navigation extends AppCompatActivity
         setTitle(item.getTitle());
         mMap.clear();
        // List<MarkerOptions> markers = new
-        for (LocationRealm loc : locationRealms) {
+        for (int i = 0; i < locationRealms.size(); i++) {
+            LocationRealm loc = locationRealms.get(i);
             String time= getTimeFromRealm(loc);
             LatLng endLatLng = new LatLng(loc.getLat(), loc.getLon());
             poly.add(endLatLng);
 
 
-            if (locationRealms.last()==loc) {
+            if ((locationRealms.size()-1)==i) {
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(endLatLng, 12));
                 marker=mMap.addMarker(new MarkerOptions()
                         .position(endLatLng)
@@ -682,7 +696,7 @@ public class Navigation extends AppCompatActivity
                         .title(time));
 
 
-                textView2.append("\n"+"if"+loc.getLat() +" "+ loc.getLon() +" "+ loc.getFBkey());
+               // textView2.append("\n"+"if"+loc.getLat() +" "+ loc.getLon() +" "+ loc.getFBkey());
             } else {
 
 
@@ -691,7 +705,7 @@ public class Navigation extends AppCompatActivity
                         .alpha((float) 0.2)
                         .title(time));
 
-                textView2.append("\n"+"else"+loc.getLat() +" "+ loc.getLon() +" "+loc.getFBkey());
+               // textView2.append("\n"+"else"+loc.getLat() +" "+ loc.getLon() +" "+loc.getFBkey());
             }
 
 
