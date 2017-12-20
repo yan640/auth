@@ -11,6 +11,7 @@ import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
 import com.example.yan_c_000.auth.FireDatabase.LatLngMy;
+import com.example.yan_c_000.auth.RealmChecker.LastLocationTimestampChecker;
 import com.example.yan_c_000.auth.RealmChecker.LocationRealmChecker;
 import com.example.yan_c_000.auth.RealmChecker.RealmChecker;
 import com.example.yan_c_000.auth.SharedPref2;
@@ -36,7 +37,7 @@ import java.util.concurrent.TimeUnit;
  * Created by yan-c_000 on 19.09.2017.
  */
 
-public class GPS_Service_once_fusion extends Service {
+public class GPS_Service_once_fusion extends Service implements LastLocationTimestampChecker.Callback{
 
     public static final String ACTION_ALARM_RECEIVER = "ACTION_ALARM_RECEIVER";
     ///SharedPreferences preferences = getApplicationContext().getSharedPreferences(,Activity.MODE_PRIVATE)  ;
@@ -45,10 +46,11 @@ public class GPS_Service_once_fusion extends Service {
     String userId = sharedPref2.GetPref(SharedPref2.APP_PREFERENCES_FBID);
 
 
-    private final static int LOCATION_REQUEST_INTERVAL_SECONDS = 10;
+    private final static int LOCATION_REQUEST_INTERVAL_SECONDS = 100;
     private final static int MIN_DISPLACEMENT_REQUEST_METRES = 0;
     private final String TAG = this.getClass().getName();
     protected Location mLastLocation;
+    boolean waitForCallBackFB = false;
 
 
     private FusedLocationProviderClient fusedLocationProviderClient = null;
@@ -72,6 +74,14 @@ public class GPS_Service_once_fusion extends Service {
     //private String userId;
 
     @Override
+    public void LastLocationTimestampCheckerCallBack( ) {
+        stopSelf();
+
+    }
+
+
+
+    @Override
     public void onCreate() {
 
         initLocationParameters();
@@ -84,11 +94,60 @@ public class GPS_Service_once_fusion extends Service {
         }
         return fusedLocationProviderClient;
     }
+    private void WherelastLocation() {
+        if (RealmChecker.HaveLastLocation(GPS_Service_once_fusion.this)) {
+            LocationRealmChecker lastlocation = RealmChecker.FindLastLocation(GPS_Service_once_fusion.this);
+            long timeMinus10minutes = Calendar.getInstance().getTimeInMillis()-10*60*1000;
+            if (lastlocation.getTimeLast()>timeMinus10minutes && lastlocation.getTimeLast()>timeMinus10minutes){
+                // Реалм свежий, нужно проверить штампы запрашиваем FB и сразу кидаем в FB
+                if (lastlocation.getFBUpdated() > 0) {
+                    //есть  FBUpdated не запрашиваем FB а сразу кидаем в FB
+                    waitForCallBackFB = false;
+
+                } else if (!(lastlocation.getFBTimeStamp() > 0)) {
+                    // нет первичного штампа сразу запрашиваем из FB
+                    waitForCallBackFB = true;
+                    GetLastLocationAndOffsetFB getLastLocationAndOffsetFB = new GetLastLocationAndOffsetFB(GPS_Service_once_fusion.this,userId,(long)0);
+
+
+                } else if (lastlocation.getTimeLast() > 0 | !(lastlocation.getFBUpdated() > 0)) {
+                    //  есть локальный апдейт 0 и есть первый щтамп, не запрашиваем из FB
+                    waitForCallBackFB = false;
+
+                } else
+                {
+                    // дефолт - запрос из FB
+                    waitForCallBackFB = true;
+                    GetLastLocationAndOffsetFB getLastLocationAndOffsetFB = new GetLastLocationAndOffsetFB(GPS_Service_once_fusion.this,userId,(long)0);
+
+                }
+
+
+
+            }
+            else {
+                // реалм старый запрашиваем FB
+                waitForCallBackFB = true;
+
+                GetLastLocationAndOffsetFB getLastLocationAndOffsetFB = new GetLastLocationAndOffsetFB(GPS_Service_once_fusion.this,userId,(long)0);
+            }
+        }
+
+        else {
+            //нету последней в реалме, запрашиваем из FB
+            waitForCallBackFB = true;
+            GetLastLocationAndOffsetFB getLastLocationAndOffsetFB = new GetLastLocationAndOffsetFB(GPS_Service_once_fusion.this,userId,(long)0);
+
+        }
+    }
 
     private void initLocationParameters() {
+        WherelastLocation();
 
 
-        mFirebaseInstance = FirebaseDatabase.getInstance();
+
+
+            mFirebaseInstance = FirebaseDatabase.getInstance();
        // mFirebaseInstance.setPersistenceEnabled(true);
         mFirebaseDatabase = mFirebaseInstance.getReference("latlng");
        // mLastLocationDatabase = mFirebaseInstance.getReference("LastLocation");
@@ -119,6 +178,7 @@ public class GPS_Service_once_fusion extends Service {
 
 
     public void SendToFirebase(double lon, double lat, double accuracy, double speed) {
+        //RemoteToLocalLoader remoteToLocalLoader = new RemoteToLocalLoader(GPS_Service_once_fusion.this,  sharedPref2.GetPref(SharedPref2.APP_PREFERENCES_FBID)  );
         Intent i = new Intent("location_update");
         i.putExtra("coordinates", lon);
         i.putExtra("getLatitude", lat);
@@ -147,16 +207,18 @@ public class GPS_Service_once_fusion extends Service {
             if (sumaccarcy<100) sumaccarcy=100;
 
             long acc = (long) sumaccarcy;
-
+            LatLngMy latlng = new LatLngMy(  lon, lat, accuracy, speed,0,0);
 //            i.putExtra("distance", "dist"+distance+"Accu"+acc);
 //            sendBroadcast(i);
             if (distance>sumaccarcy){
                 RealmChecker.CreateLocationChecker(GPS_Service_once_fusion.this, LocIdLong, lon, lat, accuracy, speed);
 
-                LatLngMy latlng = new LatLngMy(  lon, lat, accuracy, speed,0);
+
+               // LastLocationTimestampChecker last = new LastLocationTimestampChecker(GPS_Service_once_fusion.this,userId, LocId, latlng, lastlocation,false);
                 Log.e(TAG, "send class latlng 1"     );
                 mFirebaseDatabase.child(userId).child(LocId).setValue(latlng);
-              //  mLastLocationDatabase.child(userId).setValue(latlng);
+
+                //  mLastLocationDatabase.child(userId).setValue(latlng);
             }
             else{
                 RealmChecker.UpdateLocationChecker(GPS_Service_once_fusion.this,lastlocation,LocIdLong);
@@ -180,20 +242,23 @@ public class GPS_Service_once_fusion extends Service {
                 mFirebaseDatabase.child(userId).child(String.valueOf(lastlocation.FBkey)).child("timestampCreated").child("TimeLast").setValue(ServerValue.TIMESTAMP);
 //                mLastLocationDatabase.child(userId).child("lastlocaltime").setValue(LocIdLong);
 //                mLastLocationDatabase.child(userId).child("timestampCreated").child("TimeLast").setValue(ServerValue.TIMESTAMP);
+                //LastLocationTimestampChecker last = new LastLocationTimestampChecker(GPS_Service_once_fusion.this,userId, LocId, latlng,lastlocation, true);
             }
-            stopSelf();
+
         }
         else {
             RealmChecker.CreateLocationChecker(GPS_Service_once_fusion.this, LocIdLong, lon, lat, accuracy, speed);
 
-            LatLngMy latlng = new LatLngMy(  lon, lat, accuracy, speed,0);
+            LatLngMy latlng = new LatLngMy(  lon, lat, accuracy, speed,0,0);
             Log.e(TAG, "send class latlng 2"     );
             mFirebaseDatabase.child(userId).child(LocId).setValue(latlng);
 //            mLastLocationDatabase.child(userId).setValue(latlng);
 //            i.putExtra("FBkey", "null");
 //            i.putExtra("distance", "null");
 //            sendBroadcast(i);
-            stopSelf();
+           // LastLocationTimestampChecker last = new LastLocationTimestampChecker(GPS_Service_once_fusion.this,userId, LocId, latlng,null, false);
+
+
         }
 
 
@@ -259,6 +324,41 @@ public class GPS_Service_once_fusion extends Service {
         //Log.e(" ", "  " + location.getLongitude() + location.getLatitude());
 
     }
+
+//    private void SendToFirebaseLatlng(DatabaseReference postRef) {
+//        postRef.runTransaction(new Transaction.Handler() {
+//            @Override
+//            public Transaction.Result doTransaction(MutableData mutableData) {
+//                Post p = mutableData.getValue(Post.class);
+//                if (p == null) {
+//                    return Transaction.success(mutableData);
+//                }
+//
+//                if (p.stars.containsKey(getUid())) {
+//                    // Unstar the post and remove self from stars
+//                    p.starCount = p.starCount - 1;
+//                    p.stars.remove(getUid());
+//                } else {
+//                    // Star the post and add self to stars
+//                    p.starCount = p.starCount + 1;
+//                    p.stars.put(getUid(), true);
+//                }
+//
+//                // Set value and report transaction success
+//                mutableData.setValue(p);
+//                return Transaction.success(mutableData);
+//            }
+//
+//            @Override
+//            public void onComplete(DatabaseError databaseError, boolean b,
+//                                   DataSnapshot dataSnapshot) {
+//                // Transaction completed
+//                Log.d(TAG, "postTransaction:onComplete:" + databaseError);
+//            }
+//        });
+//    }
+
+
 
     @Override
     public void onDestroy() {

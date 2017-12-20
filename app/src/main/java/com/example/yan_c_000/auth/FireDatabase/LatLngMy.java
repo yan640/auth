@@ -83,7 +83,7 @@ public class LatLngMy {
     public LatLngMy() {
     }
 
-    public LatLngMy(  double lon , double lat,double accuracy,double speed,long lastlocaltime) {
+    public LatLngMy(  double lon , double lat,double accuracy,double speed,long lastlocaltime,long offset) {
         //this.time = time;
         this.lon = lon;
         this.lat = lat;
@@ -92,7 +92,8 @@ public class LatLngMy {
         this.lastlocaltime = lastlocaltime;
 
             HashMap<String, Object> timestampNow = new HashMap<>();
-            timestampNow.put("timestamp", ServerValue.TIMESTAMP);
+            if (offset>0) timestampNow.put("timestamp", offset);
+                else     timestampNow.put("timestamp", ServerValue.TIMESTAMP);
             this.timestampCreated = timestampNow;
 
     }
@@ -102,7 +103,7 @@ public class LatLngMy {
     }
 
 
-    public  LatLngMy( long FBkey , double lon , double lat,double accuracy,double speed,long lastlocaltime) {
+    public  LatLngMy( long FBkey , double lon , double lat,double accuracy,double speed,long lastlocaltime ) {
         //this.time = time;
         this.lon = lon;
         this.lat = lat;

@@ -32,6 +32,7 @@ public class RemoteToLocalLoader {
     private FirebaseDatabase mFirebaseInstance;
     Context context;
     private  String myFBuserid;
+
     interface Callback{
         void RemoteToLocalLoaderCallingBack( );
     }
@@ -239,7 +240,6 @@ public class RemoteToLocalLoader {
             }
         });
     }
-
 
 
 

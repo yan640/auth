@@ -95,7 +95,7 @@ public class GPS_Service_once extends Service {
                 String LocId = String.valueOf(LocIdLong);
                   RealmChecker.CreateLocationChecker (GPS_Service_once.this,LocIdLong, lon, lat ,0,0 );
 
-                LatLngMy latlng = new LatLngMy(  lon, lat ,0,0,0);
+                LatLngMy latlng = new LatLngMy(  lon, lat ,0,0,0,0);
 
                 mFirebaseDatabase.child(userId).child(LocId).setValue(latlng);
 

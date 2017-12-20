@@ -3,11 +3,7 @@ package com.example.yan_c_000.auth.RealmChecker;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
-import android.util.Log;
 
-import com.example.yan_c_000.auth.FireDatabase.FirebaseSender;
-import com.example.yan_c_000.auth.FireDatabase.LatLngMy;
-import com.example.yan_c_000.auth.Realm.Contacts;
 import com.example.yan_c_000.auth.Realm.LocalRealmDB;
 import com.example.yan_c_000.auth.Realm.LocationRealm;
 import com.google.firebase.database.DatabaseReference;
@@ -155,7 +151,16 @@ public class RealmChecker extends Activity {
 
     }
 
+    public static void UpdateMyLocation (final Context context,   final  LocationRealmChecker  locations , String userId) {
+        SimpleDateFormat formating = new SimpleDateFormat("HH:mm:ss.SS");
+        Realm realm = realmInit(context);
+        long LocIdLong = Calendar.getInstance().getTimeInMillis();
+        //String LocId = String.valueOf(LocIdLong);
 
+            FindLocationCheckerElementAndUpdateTimestamp(context, locations.getFBkey(), locations.getFBTimeStamp(), locations.getFBUpdated());
+
+
+    }
 
     public static void UpdateMyLocations(final Context context,   final ArrayList<LocationRealm> locations , String userId) {
         SimpleDateFormat formating = new SimpleDateFormat("HH:mm:ss.SS");
@@ -179,8 +184,8 @@ public class RealmChecker extends Activity {
                 if(results.get(i).getTimeLast()>0 &&  !(results.get(i).getFBUpdated()>0) ){
 
                 }else if (!(results.get(i).getFBTimeStamp()>0)){
-                    LatLngMy latlng = new LatLngMy(  lon, lat, accuracy, speed,0);
-                    mFirebaseDatabase.child(userId).child( String.valueOf( results.get(i).getFBkey() )).setValue(latlng);
+                   // LatLngMy latlng = new LatLngMy(  lon, lat, accuracy, speed,0);
+                   // mFirebaseDatabase.child(userId).child( String.valueOf( results.get(i).getFBkey() )).setValue(latlng);
                 }
             }
         }
