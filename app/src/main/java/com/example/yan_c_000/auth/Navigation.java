@@ -41,6 +41,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -492,11 +493,22 @@ public class Navigation extends AppCompatActivity
                 poly.add(endLatLng);
                 String time = formating.format(results.get(i).getFBkey());
                 if (results.get(i).getTimeLast()>0) time = time+"-"+ String.valueOf(formating.format(results.get(i).getTimeLast()));
-                MarkerOptions hh = new MarkerOptions()
-                        .position(endLatLng)
-                        .title(time)
-                        .snippet("Accur:" + String.valueOf(((long) results.get(i).getAccuracy())) + " Speed:" + String.valueOf(((long) results.get(i).getSpeed())));
-                mMap.addMarker(hh);
+                MarkerOptions hh;
+               if (results.get(i).getFBTimeStamp()>0 ) {
+                     hh = new MarkerOptions()
+                           .position(endLatLng)
+                           .title(time)
+                             .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+                           .snippet("Accur:" + String.valueOf(((long) results.get(i).getAccuracy())) + " Speed:" + String.valueOf(((long) results.get(i).getSpeed())));
+               }
+               else {hh = new MarkerOptions()
+                       .position(endLatLng)
+                       .title(time)
+                       .snippet("Accur:" + String.valueOf(((long) results.get(i).getAccuracy())) + " Speed:" + String.valueOf(((long) results.get(i).getSpeed())));
+
+
+               }
+               mMap.addMarker(hh);
 
 
                 if (i == results.size() - 1) {

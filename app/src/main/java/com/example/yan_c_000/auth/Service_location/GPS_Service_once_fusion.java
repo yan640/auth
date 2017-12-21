@@ -20,9 +20,12 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ServerValue;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
@@ -37,7 +40,7 @@ import java.util.concurrent.TimeUnit;
  * Created by yan-c_000 on 19.09.2017.
  */
 
-public class GPS_Service_once_fusion extends Service implements LastLocationTimestampChecker.Callback{
+public class GPS_Service_once_fusion extends Service implements LastLocationTimestampChecker.Callback, GetLastLocationAndOffsetFB.Callback{
 
     public static final String ACTION_ALARM_RECEIVER = "ACTION_ALARM_RECEIVER";
     ///SharedPreferences preferences = getApplicationContext().getSharedPreferences(,Activity.MODE_PRIVATE)  ;
@@ -51,14 +54,21 @@ public class GPS_Service_once_fusion extends Service implements LastLocationTime
     private final String TAG = this.getClass().getName();
     protected Location mLastLocation;
     boolean waitForCallBackFB = false;
-
+    boolean weFindLocation = false;
+    boolean weReturnFb = false;
+    long firstTime;
+    LocationRealmChecker lastlocation;
+    long offset;
+    long LocIdLong;
 
     private FusedLocationProviderClient fusedLocationProviderClient = null;
     private LocationCallback locationCallback = new LocationCallback() {
         @Override
         public void onLocationResult(LocationResult locationResult) {
             mLastLocation = locationResult.getLastLocation();
-            SendToFirebase(mLastLocation.getLongitude(),mLastLocation.getLatitude(),mLastLocation.getAccuracy(),mLastLocation.getSpeed());
+            weFindLocation = true;
+            SendUpdateToFB();
+           // SendToFirebase(mLastLocation.getLongitude(),mLastLocation.getLatitude(),mLastLocation.getAccuracy(),mLastLocation.getSpeed());
         }
     };
 
@@ -75,10 +85,194 @@ public class GPS_Service_once_fusion extends Service implements LastLocationTime
 
     @Override
     public void LastLocationTimestampCheckerCallBack( ) {
-        stopSelf();
+
 
     }
 
+    @Override
+    public void GetLastLocationAndOffsetFB(LocationRealmChecker locationRealm,long moffset , boolean sendfullLtnLng ) {
+
+        offset=moffset;
+        lastlocation=locationRealm;
+            weReturnFb = true;
+        SendUpdateToFB();
+
+
+
+    }
+
+    private void SendUpdateToFB (){
+        if (weFindLocation){
+            if (waitForCallBackFB){
+                if (weReturnFb){
+                    //SEND FB
+                    SenderToFb ();
+
+                }
+                else if ((Calendar.getInstance().getTimeInMillis()-firstTime)>40*1000){
+                    // нужен таймер на 41 сек для корректной работы
+                    //send realm
+                    SenderToFb ();
+                }
+
+            }
+            else {
+                //send realm
+                SenderToFb ();
+            }
+        }
+    }
+
+    private void SenderToFb() {
+          LocIdLong = Calendar.getInstance().getTimeInMillis();
+        String LocId = String.valueOf(LocIdLong);
+        if (!(lastlocation==null)) {
+
+            Location locationA = new Location("point A");
+
+            locationA.setLatitude(lastlocation.getLat());
+            locationA.setLongitude(lastlocation.getLon());
+
+            Location locationB = new Location("point B");
+
+            locationB.setLatitude(mLastLocation.getLatitude());
+            locationB.setLongitude(mLastLocation.getLongitude());
+
+            float distance = locationA.distanceTo(locationB);
+
+            double sumaccarcy = lastlocation.getAccuracy() + mLastLocation.getAccuracy();
+
+            if (sumaccarcy < 100) sumaccarcy = 100;
+
+            long acc = (long) sumaccarcy;
+//            i.putExtra("distance", "dist"+distance+"Accu"+acc);
+//            sendBroadcast(i);
+            if (distance > sumaccarcy) {
+                // location change send new in Realm & FB
+                LatLngMy latlng = new LatLngMy(mLastLocation.getLongitude(), mLastLocation.getLatitude(), mLastLocation.getAccuracy(), mLastLocation.getSpeed(), 0, 0);
+
+                RealmChecker.CreateLocationChecker(GPS_Service_once_fusion.this, LocIdLong, mLastLocation.getLongitude(), mLastLocation.getLatitude(), mLastLocation.getAccuracy(), mLastLocation.getSpeed());
+
+
+                // LastLocationTimestampChecker last = new LastLocationTimestampChecker(GPS_Service_once_fusion.this,userId, LocId, latlng, lastlocation,false);
+                Log.e(TAG, "send class latlng 1");
+                mFirebaseDatabase.child(userId).child(LocId).setValue(latlng);
+
+                //  mLastLocationDatabase.child(userId).setValue(latlng);
+            } else {
+                if (waitForCallBackFB)
+                    RealmChecker.CreateLocationChecker(GPS_Service_once_fusion.this, LocIdLong, mLastLocation.getLongitude(), mLastLocation.getLatitude(), mLastLocation.getAccuracy(), mLastLocation.getSpeed());
+                else
+                    RealmChecker.UpdateLocationChecker(GPS_Service_once_fusion.this, lastlocation, LocIdLong);
+                if (!(lastlocation.getFBTimeStamp() > 0)) {
+                    LatLngMy latlng = new LatLngMy(mLastLocation.getLongitude(), mLastLocation.getLatitude(), mLastLocation.getAccuracy(), mLastLocation.getSpeed(), 0, offset);
+                    mFirebaseDatabase.child(userId).child(LocId).setValue(latlng);
+//                    mLastLocationDatabase.child(userId).child("lon").setValue(lastlocation.getLon());
+//                    mLastLocationDatabase.child(userId).child("lat").setValue(lastlocation.getLat());
+//                    mLastLocationDatabase.child(userId).child("accuracy").setValue(lastlocation.getAccuracy());
+//                    mLastLocationDatabase.child(userId).child("speed").setValue(lastlocation.getSpeed());
+                }
+                Log.e(TAG, "send lastlocaltime");
+                mFirebaseDatabase.child(userId).child(String.valueOf(lastlocation.FBkey)).child("lastlocaltime").setValue(LocIdLong);
+                Log.e(TAG, "send TimeLast");
+                mFirebaseDatabase.child(userId).child(String.valueOf(lastlocation.FBkey)).child("timestampCreated").child("TimeLast").setValue(ServerValue.TIMESTAMP);
+//                mLastLocationDatabase.child(userId).child("lastlocaltime").setValue(LocIdLong);
+//                mLastLocationDatabase.child(userId).child("timestampCreated").child("TimeLast").setValue(ServerValue.TIMESTAMP);
+                //LastLocationTimestampChecker last = new LastLocationTimestampChecker(GPS_Service_once_fusion.this,userId, LocId, latlng,lastlocation, true);
+            }
+
+        }
+        else {
+            LatLngMy latlng = new LatLngMy(mLastLocation.getLongitude(), mLastLocation.getLatitude(), mLastLocation.getAccuracy(), mLastLocation.getSpeed(), 0, 0);
+
+            RealmChecker.CreateLocationChecker(GPS_Service_once_fusion.this, LocIdLong, mLastLocation.getLongitude(), mLastLocation.getLatitude(), mLastLocation.getAccuracy(), mLastLocation.getSpeed());
+
+
+            // LastLocationTimestampChecker last = new LastLocationTimestampChecker(GPS_Service_once_fusion.this,userId, LocId, latlng, lastlocation,false);
+            Log.e(TAG, "send class latlng 1");
+            mFirebaseDatabase.child(userId).child(LocId).setValue(latlng);
+        }
+        GetTimeStamp();
+
+
+    }
+
+    private void UpdateRealmAndDestroyService(LocationRealmChecker rlastlocation){
+        RealmChecker.UpdateLocationChecker(GPS_Service_once_fusion.this, rlastlocation, LocIdLong);
+        stopSelf();
+    }
+
+
+
+    public  void GetTimeStamp(){
+        FirebaseDatabase mFirebaseInstance;
+        mFirebaseInstance = FirebaseDatabase.getInstance();
+        DatabaseReference FireRefLat = mFirebaseInstance.getReference("latlng");
+        //FireRefLat.child(contact.getKey()).limitToFirst(10).addValueEventListener(new ValueEventListener() {
+
+
+
+        FireRefLat.child(userId).orderByKey().limitToLast(1).addListenerForSingleValueEvent(lastLocationValueEventListener);
+    }
+    private final ValueEventListener lastLocationValueEventListener = new ValueEventListener() {
+        @Override
+        public void onDataChange(DataSnapshot dataSnapshot) {
+            // This method is called once with the initial value and again
+            // whenever data at this location is updated.
+            //ArrayList<LocationRealmChecker> locations = new ArrayList<LocationRealmChecker>();
+            if (dataSnapshot.hasChildren()) {
+
+                LocationRealmChecker locationRealm = new LocationRealmChecker();
+                for (DataSnapshot ds : dataSnapshot.getChildren()) {
+                    //if (!(ds==null) && !(ds.getValue(LatLngMy.class).getLat()==null) && !(ds.getKey()==null) && !(ds.getKey()==null) && !(ds.getKey()==null) &&  !(ds.getKey()==null) ) {
+
+
+                    locationRealm.setFBkey(Long.parseLong(ds.getKey()));
+
+
+                    locationRealm.setFBUpdated(ds.getValue(LatLngMy.class).getTimestampLastLong());
+
+                    locationRealm.setFBTimeStamp(ds.getValue(LatLngMy.class).getTimestampCreatedLong());
+
+
+                    locationRealm.setLat(ds.getValue(LatLngMy.class).getLat());
+                    locationRealm.setLon(ds.getValue(LatLngMy.class).getLon());
+                    locationRealm.setAccuracy(ds.getValue(LatLngMy.class).getAccuracy());
+                    locationRealm.setSpeed(ds.getValue(LatLngMy.class).getSpeed());
+                    locationRealm.setFBkey(Long.parseLong(ds.getKey()));
+                    if (ds.getValue(LatLngMy.class).getlastlocaltime() > 0)
+                        locationRealm.setTimeLast(ds.getValue(LatLngMy.class).getlastlocaltime());
+                    if (ds.getValue(LatLngMy.class).getTimestampLastLong() > 0)
+                        locationRealm.setFBUpdated(ds.getValue(LatLngMy.class).getTimestampLastLong());
+
+                    locationRealm.setFBTimeStamp(ds.getValue(LatLngMy.class).getTimestampCreatedLong());
+                    UpdateRealmAndDestroyService(locationRealm);
+                    //ds.getValue(ServerValue.TIMESTAMP);
+
+                    // }
+
+                }
+
+
+                //if (!(ds==null) && !(ds.getValue(LatLngMy.class).getLat()==null) && !(ds.getKey()==null) && !(ds.getKey()==null) && !(ds.getKey()==null) &&  !(ds.getKey()==null) ) {
+
+                //ds.getValue(ServerValue.TIMESTAMP);
+                //locations.add(locationRealm);
+                // }
+
+
+            }
+            // FB пуст отправляем реалм c offset
+            else  stopSelf();
+
+
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+
+        }
+    };
 
 
     @Override
@@ -96,7 +290,7 @@ public class GPS_Service_once_fusion extends Service implements LastLocationTime
     }
     private void WherelastLocation() {
         if (RealmChecker.HaveLastLocation(GPS_Service_once_fusion.this)) {
-            LocationRealmChecker lastlocation = RealmChecker.FindLastLocation(GPS_Service_once_fusion.this);
+              lastlocation = RealmChecker.FindLastLocation(GPS_Service_once_fusion.this);
             long timeMinus10minutes = Calendar.getInstance().getTimeInMillis()-10*60*1000;
             if (lastlocation.getTimeLast()>timeMinus10minutes && lastlocation.getTimeLast()>timeMinus10minutes){
                 // Реалм свежий, нужно проверить штампы запрашиваем FB и сразу кидаем в FB
@@ -107,7 +301,7 @@ public class GPS_Service_once_fusion extends Service implements LastLocationTime
                 } else if (!(lastlocation.getFBTimeStamp() > 0)) {
                     // нет первичного штампа сразу запрашиваем из FB
                     waitForCallBackFB = true;
-                    GetLastLocationAndOffsetFB getLastLocationAndOffsetFB = new GetLastLocationAndOffsetFB(GPS_Service_once_fusion.this,userId,(long)0);
+                    GetLastLocationAndOffsetFB getLastLocationAndOffsetFB = new GetLastLocationAndOffsetFB(GPS_Service_once_fusion.this,userId,lastlocation);
 
 
                 } else if (lastlocation.getTimeLast() > 0 | !(lastlocation.getFBUpdated() > 0)) {
@@ -118,7 +312,7 @@ public class GPS_Service_once_fusion extends Service implements LastLocationTime
                 {
                     // дефолт - запрос из FB
                     waitForCallBackFB = true;
-                    GetLastLocationAndOffsetFB getLastLocationAndOffsetFB = new GetLastLocationAndOffsetFB(GPS_Service_once_fusion.this,userId,(long)0);
+                    GetLastLocationAndOffsetFB getLastLocationAndOffsetFB = new GetLastLocationAndOffsetFB(GPS_Service_once_fusion.this,userId,lastlocation);
 
                 }
 
@@ -129,19 +323,20 @@ public class GPS_Service_once_fusion extends Service implements LastLocationTime
                 // реалм старый запрашиваем FB
                 waitForCallBackFB = true;
 
-                GetLastLocationAndOffsetFB getLastLocationAndOffsetFB = new GetLastLocationAndOffsetFB(GPS_Service_once_fusion.this,userId,(long)0);
+                GetLastLocationAndOffsetFB getLastLocationAndOffsetFB = new GetLastLocationAndOffsetFB(GPS_Service_once_fusion.this,userId,lastlocation);
             }
         }
 
         else {
             //нету последней в реалме, запрашиваем из FB
             waitForCallBackFB = true;
-            GetLastLocationAndOffsetFB getLastLocationAndOffsetFB = new GetLastLocationAndOffsetFB(GPS_Service_once_fusion.this,userId,(long)0);
+            GetLastLocationAndOffsetFB getLastLocationAndOffsetFB = new GetLastLocationAndOffsetFB(GPS_Service_once_fusion.this,userId,lastlocation);
 
         }
     }
 
     private void initLocationParameters() {
+        firstTime=Calendar.getInstance().getTimeInMillis();
         WherelastLocation();
 
 
