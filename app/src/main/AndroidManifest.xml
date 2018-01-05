@@ -42,7 +42,7 @@
             android:theme="@style/AppTheme.NoActionBar"></activity>
 
 
-        <service android:name=".Service_location.GPS_Service_once_fusion" />
+        <service android:name=".Service_location.GPS_Service_once_fusion_last" />
 
         <receiver
             android:name=".RestartAlarmsReceiver"

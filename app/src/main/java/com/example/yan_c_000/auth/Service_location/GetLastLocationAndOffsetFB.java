@@ -84,18 +84,18 @@ public class GetLastLocationAndOffsetFB {
 
 
 
-                        LocationRealm locationRealm = new LocationRealm();
-                        locationRealm.setLat(ds.getValue(LatLngMy.class).getLat());
-                        locationRealm.setLon(ds.getValue(LatLngMy.class).getLon());
-                        locationRealm.setAccuracy(ds.getValue(LatLngMy.class).getAccuracy());
-                        locationRealm.setSpeed(ds.getValue(LatLngMy.class).getSpeed());
-                        locationRealm.setFBkey(Long.parseLong(ds.getKey()));
-                        if (ds.getValue(LatLngMy.class).getlastlocaltime() > 0)
-                            locationRealm.setLocaltimeupdate(ds.getValue(LatLngMy.class).getlastlocaltime());
-                        if (ds.getValue(LatLngMy.class).getTimestampLastLong() > 0)
-                            locationRealm.setFBUpdated(ds.getValue(LatLngMy.class).getTimestampLastLong());
+//                        LocationRealm locationRealm = new LocationRealm();
+//                        locationRealm.setLat(ds.getValue(LatLngMy.class).getLat());
+//                        locationRealm.setLon(ds.getValue(LatLngMy.class).getLon());
+//                        locationRealm.setAccuracy(ds.getValue(LatLngMy.class).getAccuracy());
+//                        locationRealm.setSpeed(ds.getValue(LatLngMy.class).getSpeed());
+//                        locationRealm.setFBkey(Long.parseLong(ds.getKey()));
+//                        if (ds.getValue(LatLngMy.class).getlastlocaltime() > 0)
+//                            locationRealm.setLocaltimeupdate(ds.getValue(LatLngMy.class).getlastlocaltime());
+//                        if (ds.getValue(LatLngMy.class).getTimestampLastLong() > 0)
+//                            locationRealm.setFBUpdated(ds.getValue(LatLngMy.class).getTimestampLastLong());
 
-                        locationRealm.setFBCreated(ds.getValue(LatLngMy.class).getTimestampCreatedLong());
+//                        locationRealm.setFBCreated(ds.getValue(LatLngMy.class).getTimestampCreatedLong());
 
                         //ds.getValue(ServerValue.TIMESTAMP);
 
@@ -162,16 +162,16 @@ public class GetLastLocationAndOffsetFB {
             mFirebaseDatabase = mFirebaseInstance.getReference("latlng");
             if ( lastlocation==null  ){
 
-                mFirebaseDatabase.child(userId).child(LocId).setValue(latlng);
+//                mFirebaseDatabase.child(userId).child(LocId).setValue(latlng);
             }
             else {
 
                 LatLngMy latlng2 = new LatLngMy(  lastlocation.getLon(), lastlocation.getLat(), lastlocation.getAccuracy(), lastlocation.getSpeed(),lastlocation.getTimeLast(),lastlocation.getFBkey()+offset);
-                mFirebaseDatabase.child(userId).child(LocId).setValue(latlng2);
+              //  mFirebaseDatabase.child(userId).child(LocId).setValue(latlng2);
                 // mFirebaseDatabase.child(userId).child(String.valueOf(lastlocation.FBkey)).child("timestampCreated").child("TimeLast").setValue(lastlocation.getTimeLast()+offset);
             }
 
-            callback.LastLocationTimestampCheckerCallBack(  );
+           // callback.LastLocationTimestampCheckerCallBack(  );
         }
 
     }

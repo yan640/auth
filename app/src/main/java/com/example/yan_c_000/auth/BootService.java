@@ -6,7 +6,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 
-import com.example.yan_c_000.auth.Service_location.GPS_Service_once_fusion;
+import com.example.yan_c_000.auth.Service_location.GPS_Service_once_fusion_last;
 
 import java.util.Calendar;
 
@@ -31,9 +31,9 @@ public class BootService extends IntentService {
 //        Intent serviceIntent = new Intent(ctx, GPS_Service_once.class);
 //// make sure you **don't** use *PendingIntent.getBroadcast*, it wouldn't work
 //        serviceIntent.setAction(GPS_Service_once.ACTION_ALARM_RECEIVER);
-        Intent serviceIntent = new Intent(ctx, GPS_Service_once_fusion.class);
+        Intent serviceIntent = new Intent(ctx, GPS_Service_once_fusion_last.class);
 // make sure you **don't** use *PendingIntent.getBroadcast*, it wouldn't work
-        serviceIntent.setAction(GPS_Service_once_fusion.ACTION_ALARM_RECEIVER);
+        serviceIntent.setAction(GPS_Service_once_fusion_last.ACTION_ALARM_RECEIVER);
         PendingIntent servicePendingIntent =
                 PendingIntent.getService(ctx,
                         0, // integer constant used to identify the service

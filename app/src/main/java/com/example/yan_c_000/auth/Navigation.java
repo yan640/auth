@@ -36,7 +36,7 @@ import com.example.yan_c_000.auth.Realm.LocalRealmDB;
 import com.example.yan_c_000.auth.Realm.LocationRealm;
 import com.example.yan_c_000.auth.RealmChecker.LocationRealmChecker;
 import com.example.yan_c_000.auth.RealmChecker.RealmChecker;
-import com.example.yan_c_000.auth.Service_location.GPS_Service_once_fusion;
+import com.example.yan_c_000.auth.Service_location.GPS_Service_once_fusion_last;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -520,10 +520,10 @@ public class Navigation extends AppCompatActivity
         AlarmManager am = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
         long interval = 1000 * 60 * 2; // 5/10 minutes in milliseconds
         //Intent serviceIntent = new Intent(ctx, GPS_Service_once.class);
-        Intent serviceIntent = new Intent(ctx, GPS_Service_once_fusion.class);
+        Intent serviceIntent = new Intent(ctx, GPS_Service_once_fusion_last.class);
 // make sure you **don't** use *PendingIntent.getBroadcast*, it wouldn't work
         //serviceIntent.setAction(GPS_Service_once.ACTION_ALARM_RECEIVER);
-        serviceIntent.setAction(GPS_Service_once_fusion.ACTION_ALARM_RECEIVER);
+        serviceIntent.setAction(GPS_Service_once_fusion_last.ACTION_ALARM_RECEIVER);
         PendingIntent servicePendingIntent =
                 PendingIntent.getService(ctx,
                         0, // integer constant used to identify the service
