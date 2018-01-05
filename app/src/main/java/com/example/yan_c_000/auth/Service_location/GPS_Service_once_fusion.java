@@ -172,7 +172,7 @@ public class GPS_Service_once_fusion extends Service implements LastLocationTime
 //                    mLastLocationDatabase.child(userId).child("accuracy").setValue(lastlocation.getAccuracy());
 //                    mLastLocationDatabase.child(userId).child("speed").setValue(lastlocation.getSpeed());
                 }
-                Log.e(TAG, "send lastlocaltime");
+//                Log.e(TAG, "send lastlocaltime");
                 mFirebaseDatabase.child(userId).child(String.valueOf(lastlocation.FBkey)).child("lastlocaltime").setValue(LocIdLong);
                 Log.e(TAG, "send TimeLast");
                 mFirebaseDatabase.child(userId).child(String.valueOf(lastlocation.FBkey)).child("timestampCreated").child("TimeLast").setValue(ServerValue.TIMESTAMP);

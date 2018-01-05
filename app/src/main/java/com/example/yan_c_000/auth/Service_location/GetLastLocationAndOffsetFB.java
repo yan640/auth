@@ -87,8 +87,8 @@ public class GetLastLocationAndOffsetFB {
                     locationRealm.setAccuracy(ds.getValue(LatLngMy.class).getAccuracy());
                     locationRealm.setSpeed(ds.getValue(LatLngMy.class).getSpeed());
                     locationRealm.setFBkey(Long.parseLong(ds.getKey()));
-                    if (ds.getValue(LatLngMy.class).getlastlocaltime() > 0)
-                        locationRealm.setTimeLast(ds.getValue(LatLngMy.class).getlastlocaltime());
+//                    if (ds.getValue(LatLngMy.class).getlastlocaltime() > 0)
+//                        locationRealm.setTimeLast(ds.getValue(LatLngMy.class).getlastlocaltime());
                     if (ds.getValue(LatLngMy.class).getTimestampLastLong() > 0)
                         locationRealm.setFBUpdated(ds.getValue(LatLngMy.class).getTimestampLastLong());
 

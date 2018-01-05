@@ -117,8 +117,8 @@ public class FBLocationListener {
                     locationRealm.setAccuracy(dataSnapshot.getValue(LatLngMy.class).getAccuracy());
                     locationRealm.setSpeed(dataSnapshot.getValue(LatLngMy.class).getSpeed());
                     locationRealm.setFBkey(Long.parseLong(dataSnapshot.getRef().getKey()));
-                    if (dataSnapshot.getValue(LatLngMy.class).getlastlocaltime() > 0)
-                        locationRealm.setLocaltimeupdate(dataSnapshot.getValue(LatLngMy.class).getlastlocaltime());
+//                    if (dataSnapshot.getValue(LatLngMy.class).getlastlocaltime() > 0)
+//                        locationRealm.setLocaltimeupdate(dataSnapshot.getValue(LatLngMy.class).getlastlocaltime());
                     if (dataSnapshot.getValue(LatLngMy.class).getTimestampLastLong() > 0)
                         locationRealm.setFBUpdated(dataSnapshot.getValue(LatLngMy.class).getTimestampLastLong());
 
@@ -173,8 +173,8 @@ public class FBLocationListener {
                     locationRealm.setAccuracy(dataSnapshot.getValue(LatLngMy.class).getAccuracy());
                     locationRealm.setSpeed(dataSnapshot.getValue(LatLngMy.class).getSpeed());
                     locationRealm.setFBkey(Long.parseLong(dataSnapshot.getRef().getKey()));
-                    if (dataSnapshot.getValue(LatLngMy.class).getlastlocaltime() > 0)
-                        locationRealm.setLocaltimeupdate(dataSnapshot.getValue(LatLngMy.class).getlastlocaltime());
+//                    if (dataSnapshot.getValue(LatLngMy.class).getlastlocaltime() > 0)
+//                        locationRealm.setLocaltimeupdate(dataSnapshot.getValue(LatLngMy.class).getlastlocaltime());
                     if (dataSnapshot.getValue(LatLngMy.class).getTimestampLastLong() > 0)
                         locationRealm.setFBUpdated(dataSnapshot.getValue(LatLngMy.class).getTimestampLastLong());
 
@@ -235,8 +235,8 @@ public class FBLocationListener {
                 locationRealm.setAccuracy(ds.getValue(LatLngMy.class).getAccuracy());
                 locationRealm.setSpeed(ds.getValue(LatLngMy.class).getSpeed());
                 locationRealm.setFBkey(Long.parseLong(ds.getKey()));
-                if (ds.getValue(LatLngMy.class).getlastlocaltime() > 0)
-                    locationRealm.setLocaltimeupdate(ds.getValue(LatLngMy.class).getlastlocaltime());
+//                if (ds.getValue(LatLngMy.class).getlastlocaltime() > 0)
+//                    locationRealm.setLocaltimeupdate(ds.getValue(LatLngMy.class).getlastlocaltime());
                 if (ds.getValue(LatLngMy.class).getTimestampLastLong() > 0)
                     locationRealm.setFBUpdated(ds.getValue(LatLngMy.class).getTimestampLastLong());
 

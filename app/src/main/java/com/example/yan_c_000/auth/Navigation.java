@@ -743,9 +743,11 @@ public class Navigation extends AppCompatActivity
     public String getTimeFromRealm (LocationRealm loc ){
         String time="";
         if (loc.getFBUpdated()>0)               time = formating.format(loc.getFBCreated())+"-"+ formating.format(loc.getFBUpdated());
-        else if ( loc.getFBCreated()>0)         time = formating.format(loc.getFBCreated()) ;
-        else if ( loc.getLocaltimeupdate()>0 )  time = formating.format(loc.getFBkey())+"-"+ formating.format(loc.getLocaltimeupdate());
-        else                                    time = formating.format(loc.getFBkey()) ;
+        else         time = formating.format(loc.getFBCreated()) ;
+
+        //        else if ( loc.getFBCreated()>0)         time = formating.format(loc.getFBCreated()) ;
+//        else if ( loc.getLocaltimeupdate()>0 )  time = formating.format(loc.getFBkey())+"-"+ formating.format(loc.getLocaltimeupdate());
+//        else                                    time = formating.format(loc.getFBkey()) ;
 
         return time;
     }
