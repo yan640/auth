@@ -109,13 +109,13 @@ public class RemoteToLocalLoader {
     private   void LoadLocations (){
         RealmResults<Contacts>   results =  LocalRealmDB.GetAllContacts(context);
          i =results.size();
-        String TwoDaysBeforeNow  = String.valueOf(Calendar.getInstance().getTimeInMillis()-172800000);
+        String ThreeDaysBeforeNow  = String.valueOf(Calendar.getInstance().getTimeInMillis()-259200000);
         String Now  = String.valueOf(Calendar.getInstance().getTimeInMillis());
         ArrayList<String> key = new ArrayList<String>() ;
         if (i>0 ) {
 
 
-            LoadLocationsForContact( results, i,TwoDaysBeforeNow ,   Now  );
+            LoadLocationsForContact( results, i,ThreeDaysBeforeNow ,   Now  );
         }
 
 
@@ -125,7 +125,7 @@ public class RemoteToLocalLoader {
 
 
 
-    private   void LoadLocationsForContact (final RealmResults<Contacts> results,final int u,final String TwoDaysBeforeNow ,final String Now ){
+    private   void LoadLocationsForContact (final RealmResults<Contacts> results,final int u,final String ThreeDaysBeforeNow ,final String Now ){
         if (u>0) {
             i=u;
             FirebaseDatabase mFirebaseInstance;
@@ -138,7 +138,7 @@ public class RemoteToLocalLoader {
             if (!(contact==null) && !(contact.getKey()==null) && !(contact.getKey().isEmpty())) {
                 String Key = contact.getKey();
 
-                FireRefLat.child(Key).orderByKey().startAt(TwoDaysBeforeNow).endAt(Now).limitToLast(7).addListenerForSingleValueEvent(new ValueEventListener() {
+                FireRefLat.child(Key).orderByKey().startAt(ThreeDaysBeforeNow).endAt(Now).limitToLast(7).addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         // This method is called once with the initial value and again
@@ -170,7 +170,7 @@ public class RemoteToLocalLoader {
                         LocalRealmDB.SaveLocations(context, contact, locations);
 
                         int j = i - 1;
-                        LoadLocationsForContact(results, j, TwoDaysBeforeNow, Now);
+                        LoadLocationsForContact(results, j, ThreeDaysBeforeNow, Now);
 
                     }
 
@@ -182,7 +182,7 @@ public class RemoteToLocalLoader {
             }
             else {
                 int j = i - 1;
-                LoadLocationsForContact(results, j, TwoDaysBeforeNow, Now);
+                LoadLocationsForContact(results, j, ThreeDaysBeforeNow, Now);
             }
         }
         else {

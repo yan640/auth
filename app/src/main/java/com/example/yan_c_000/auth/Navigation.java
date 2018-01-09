@@ -47,8 +47,11 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -92,6 +95,7 @@ public class Navigation extends AppCompatActivity
     private static final String PHONE_NUMBER = ContactsContract.CommonDataKinds.Phone.NUMBER;
     private static final String PHONE_CONTACT_ID = ContactsContract.CommonDataKinds.Phone.CONTACT_ID;
     private static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 300;
+    private static final String AddNewContact = "AddNewContact";
     ArrayList<Contact> cont_nav_drawer = new ArrayList<>();
     ArrayList<Contact> cont = new ArrayList<>();
     public String CurrentCont;
@@ -116,7 +120,7 @@ public class Navigation extends AppCompatActivity
         RealmResults<Contacts> results = LocalRealmDB.GetAllContacts(this);
         menu.clear();
         topChannelMenu = menu.addSubMenu("Contacts");
-
+        setMenuItemTag(topChannelMenu.add("Add new..."),AddNewContact);
         for (Contact c: cont) {
             for (Contacts contacts : results) {
                 if (c.getPhonefull().equals(contacts.getPhone())) {
@@ -628,7 +632,8 @@ public class Navigation extends AppCompatActivity
         buttRefresh.setOnClickListener( new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                         FireRefLat = mFirebaseInstance.getReference("latlng/STUrTs2KdtguGRHIoYpvWBwP1K83");
+         FireRefLat.addListenerForSingleValueEvent(UserListener);
                 SharedPref2 sharedPref2 = new SharedPref2();
                 remoteToLocalLoader = new RemoteToLocalLoader(Navigation.this,  sharedPref2.GetPref(SharedPref2.APP_PREFERENCES_FBID)  );
                 remoteToLocalLoader.Load();
@@ -642,7 +647,30 @@ public class Navigation extends AppCompatActivity
             }});
     }
 
+    private final ValueEventListener UserListener = new  ValueEventListener(){
 
+        @Override
+        public void onDataChange(DataSnapshot dataSnapshot) {
+            // This method is called once with the initial value and again
+            // whenever data at this location is updated.
+            //showData(dataSnapshot);
+            FireRefLat = mFirebaseInstance.getReference("latlng/STUrTs2KdtguGRHIoYpvWBwP1K83");
+            long cutoff = Calendar.getInstance().getTimeInMillis() - 72 * 60 * 60 * 1000;
+            Log.e(TAG, "onDataChange"  );
+            for (DataSnapshot ds : dataSnapshot.getChildren()) {
+                Log.e(TAG, "CreateContact phone"   + ds.getValue(User.class).getPhone() );
+                if (Long.parseLong(ds.getKey())<cutoff) FireRefLat.child(ds.getKey()).removeValue();
+
+            }
+
+
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+
+        }
+    };
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
@@ -684,57 +712,64 @@ public class Navigation extends AppCompatActivity
         lastNavigationItemId = item.getItemId();
 
         CurrentCont = getMenuItemTag(item);
-         item.setChecked(true)  ;
-
-
-        RealmList<LocationRealm> locationRealms= LocalRealmDB.GetLocations(this,CurrentCont);
-
-        textView2.setText("");
-        List<LatLng> poly = new ArrayList<LatLng>();
-        setTitle(item.getTitle());
-        mMap.clear();
-       // List<MarkerOptions> markers = new
-        int sd = locationRealms.size();
-
-
-        if (locationRealms.size() > 0) {
-            //for (LocationRealmChecker lrm : results) {
-            for (int i = (locationRealms.size() - 1); i > 0 && i > sd - 15; i--) {
-
-                LocationRealm loc = locationRealms.get(i);
-                String time = getTimeFromRealm(loc);
-                LatLng endLatLng = new LatLng(loc.getLat(), loc.getLon());
-                poly.add(endLatLng);
-
-
-                if ((locationRealms.size() - 1) == i) {
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(endLatLng, 12));
-                    marker = mMap.addMarker(new MarkerOptions()
-                            .position(endLatLng)
-                            .alpha((float) 1)
-                            .title(time));
-
-
-                    // textView2.append("\n"+"if"+loc.getLat() +" "+ loc.getLon() +" "+ loc.getFBkey());
-                } else {
-
-
-                    marker = mMap.addMarker(new MarkerOptions()
-                            .position(endLatLng)
-                            .alpha((float) 0.2)
-                            .title(time));
-
-                    // textView2.append("\n"+"else"+loc.getLat() +" "+ loc.getLon() +" "+loc.getFBkey());
-                }
-            }
+        if (CurrentCont.equals( AddNewContact)) {
+            //TODO открыть меню со всеми контактами . отправить в ФБ. Написать функцию создания закрытого раздела в базе. Настроить мониторинг своего раздела базы на получение запроса. Получать локации только из списка разрешенных контактов.
 
         }
-
-        mMap.addPolyline(new PolylineOptions()
-                .addAll(poly)
-                .color(Color.BLACK));
+        else {
+            item.setChecked(true);
 
 
+            RealmList<LocationRealm> locationRealms = LocalRealmDB.GetLocations(this, CurrentCont);
+
+            textView2.setText("");
+            List<LatLng> poly = new ArrayList<LatLng>();
+            setTitle(item.getTitle());
+            mMap.clear();
+            // List<MarkerOptions> markers = new
+            int sd = locationRealms.size();
+
+
+            if (locationRealms.size() > 0) {
+                //for (LocationRealmChecker lrm : results) {
+                for (int i = (locationRealms.size() - 1); i > 0 && i > sd - 15; i--) {
+
+                    LocationRealm loc = locationRealms.get(i);
+                    String time = getTimeFromRealm(loc);
+                    LatLng endLatLng = new LatLng(loc.getLat(), loc.getLon());
+                    poly.add(endLatLng);
+
+
+                    if ((locationRealms.size() - 1) == i) {
+                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(endLatLng, 12));
+                        marker = mMap.addMarker(new MarkerOptions()
+                                .position(endLatLng)
+                                .alpha((float) 1)
+                                .title(time));
+
+
+                        // textView2.append("\n"+"if"+loc.getLat() +" "+ loc.getLon() +" "+ loc.getFBkey());
+                    } else {
+
+
+                        marker = mMap.addMarker(new MarkerOptions()
+                                .position(endLatLng)
+                                .alpha((float) 0.2)
+                                .title(time));
+
+                        // textView2.append("\n"+"else"+loc.getLat() +" "+ loc.getLon() +" "+loc.getFBkey());
+                    }
+                }
+
+            }
+
+            mMap.addPolyline(new PolylineOptions()
+                    .addAll(poly)
+                    .color(Color.BLACK));
+
+
+
+        }
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
