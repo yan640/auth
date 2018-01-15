@@ -27,7 +27,7 @@ import static com.example.yan_c_000.auth.Realm.LocalRealmDB.GetAllContacts;
 public class FBLocationListener {
 
     private DatabaseReference mFirebaseDatabase;
-    private DatabaseReference mLastLocationDatabase;
+
     private FirebaseDatabase mFirebaseInstance;
     Context context;
     public static final String TAG = FBLocationListener.class.getName();

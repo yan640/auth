@@ -131,7 +131,7 @@
                     android:layout_weight="1.0"
                     android:text="@string/verify_phone_auth"
                     android:theme="@style/ThemeOverlay.MyDarkButton"
-                    android:visibility="invisible" />
+                    android:visibility="visible" />
 
                 <Button
                     android:theme="@style/ThemeOverlay.MyDarkButton"

@@ -24,14 +24,9 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyDlUcXBlmnf-5dRSwWBfpyi7kZ6P4S9xPU" />
 
-
-
         <activity
             android:name=".MainActivity"
-            android:screenOrientation="portrait">
-
-
-        </activity>
+            android:screenOrientation="portrait"></activity>
         <activity
             android:name=".Hallfinder"
             android:screenOrientation="portrait" />
@@ -39,8 +34,15 @@
             android:name=".Navigation"
             android:label="@string/title_activity_navigation"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.app.searchable"
+                android:resource="@xml/searchable" />
 
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+            </intent-filter>
+        </activity>
 
         <service android:name=".Service_location.GPS_Service_once_fusion_last" />
 
@@ -61,6 +63,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".GetContact"></activity>
     </application>
 
 </manifest>

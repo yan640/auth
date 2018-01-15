@@ -28,9 +28,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
+import com.example.yan_c_000.auth.Contacts.FixPhoneNumber;
 import com.example.yan_c_000.auth.FireDatabase.FBLocationListener;
+import com.example.yan_c_000.auth.FireDatabase.UserListener;
 import com.example.yan_c_000.auth.Realm.Contacts;
 import com.example.yan_c_000.auth.Realm.LocalRealmDB;
 import com.example.yan_c_000.auth.Realm.LocationRealm;
@@ -64,7 +67,7 @@ import io.realm.RealmList;
 import io.realm.RealmResults;
 
 public class Navigation extends AppCompatActivity
-        implements RemoteToLocalLoader.Callback, FBLocationListener.Callback,  NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback {
+        implements RemoteToLocalLoader.Callback, FBLocationListener.Callback, UserListener.Callback, NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback {
     private TextView textView2;
     private Button buttRefresh;
     private GoogleMap mMap;
@@ -78,7 +81,7 @@ public class Navigation extends AppCompatActivity
     private DatabaseReference mFirebaseDatabase;
     private DatabaseReference FireRefLat;
     private FirebaseDatabase mFirebaseInstance;
-    private final String TAG = "GPSLocator.Main";
+    private final String TAG = "Navigation.Main";
     SimpleDateFormat formating = new SimpleDateFormat("HH:mm:ss.SS");
     String path = "";
     String mJsonOutput;
@@ -86,6 +89,7 @@ public class Navigation extends AppCompatActivity
     public static final String NAME = "name";
     public Menu menu;
     public Menu topChannelMenu;
+
     private BroadcastReceiver broadcastReceiver;
     private String userId;
     private FirebaseAuth mAuth;
@@ -96,12 +100,15 @@ public class Navigation extends AppCompatActivity
     private static final String PHONE_CONTACT_ID = ContactsContract.CommonDataKinds.Phone.CONTACT_ID;
     private static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 300;
     private static final String AddNewContact = "AddNewContact";
+    private static final String IncomingPermissions = "IncomingPermissions";
     ArrayList<Contact> cont_nav_drawer = new ArrayList<>();
     ArrayList<Contact> cont = new ArrayList<>();
+    ArrayList<Contact> Permissions = new ArrayList<>();
     public String CurrentCont;
     public RemoteToLocalLoader remoteToLocalLoader;
     public Marker marker;
     int lastNavigationItemId=0;
+    int requestCode = 123;
     Map<MenuItem, String> MenuPhoneSaver = new HashMap<MenuItem, String>();
 
     public void setMenuItemTag(MenuItem item, String phone)
@@ -151,8 +158,66 @@ public class Navigation extends AppCompatActivity
         }
 
         FBLocationListener fbLocationListener = new FBLocationListener(this);
+        SharedPref2 sharedPref2 = new SharedPref2();
+        String Myid = sharedPref2.GetPref(SharedPref2.APP_PREFERENCES_FBID  );
+
+        UserListener userListener= new UserListener(this);
+        userListener.Listen(Myid);
 
     }
+
+    @Override
+    public void UserListenerCallBack( ArrayList<Contact> Users) {
+
+        if (Users.size()>0) {
+            for (Contact c: cont) {
+                for (Contact contacts : Users) {
+                    if (c.getPhonefull().equals(contacts.getPhonefull())) {
+                        Log.e(TAG, "Yes phone equal!!!!!!  " + c.getPhone() + "equal  " + contacts.getPhone());
+
+                        contacts.setName(c.getName());
+
+
+                    }
+
+                }
+
+            }
+            Permissions.addAll(Users);
+            setMenuItemTag(topChannelMenu.add("Incoming requsts +"+Users.size() ),IncomingPermissions);
+        }
+//        Permissions = menu.addSubMenu("Permissions");
+//         //setMenuItemTag(topChannelMenu.add("Add new..."),AddNewContact);
+//        for (Contact c: cont) {
+//            for (String[] contacts : Users) {
+//                if (c.getPhonefull().equals(contacts[1])) {
+//                    Log.e(TAG, "Yes phone equal!!!!!!  " + c.getPhone() + "equal  " + contacts[1]);
+//                    contacts[2] = c.getName();
+//
+//
+//
+//                }
+//
+//            }
+//
+//        }
+//
+//        for (String[] contacts : Users) {
+//
+//
+//            setMenuItemTag(Permissions.add(contacts[2]),contacts[1]);
+//
+//
+//
+//
+//
+//        }
+//
+//        FBLocationListener fbLocationListener = new FBLocationListener(this);
+
+    }
+
+
 
     @Override
     public void FBLocationListenerCallBack(String phone ) {
@@ -177,6 +242,7 @@ public class Navigation extends AppCompatActivity
 
 
     }
+
 
 
     @Override
@@ -317,8 +383,7 @@ public class Navigation extends AppCompatActivity
         //LocalRealmDB.removeAllContact(this);
 
         //LocalRealmDB.FindContact(this,phone);
-        if (!contacts_permissions()) ;
-        sendContats();
+
 
 
 
@@ -334,9 +399,11 @@ public class Navigation extends AppCompatActivity
             sharedPref2.SetPrefBool(SharedPref2.APP_PREFERENCES_NEW_USER_BOOLEAN, false );
         }
 
+        if (!contacts_permissions()) ;
+        sendContats();
 
 
-       // RemoteToLocalLoader.Load(this);
+        // RemoteToLocalLoader.Load(this);
 
 
 //        mFirebaseDatabase.addValueEventListener(new ValueEventListener() {
@@ -378,6 +445,8 @@ public class Navigation extends AppCompatActivity
     private void sendContats() {
 
         cont = getAll(this);
+
+
 
     }
 
@@ -433,9 +502,9 @@ public class Navigation extends AppCompatActivity
                                     //con.setPhone(TextUtils.join(",", phones.get(id).toArray()));
                                     //phones.get(id).get(i).replaceAll("[ -()]","");
                                     String phone = PhoneNumberUtils.formatNumber(phones.get(id).get(i).replaceAll("[ -()]", ""));
-                                    if (PhoneNumberUtils.isGlobalPhoneNumber(phone) & phone.length() > 9) {
+                                    if (PhoneNumberUtils.isGlobalPhoneNumber(phone) & phone.length() > 10) {
                                         String phonefull=phone;
-                                        phone = phone.substring(phone.length() - 9, phone.length());
+                                        phone = phone.substring(phone.length() - 10, phone.length());
 
                                         Contact con = new Contact(cur.getString(cur.getColumnIndex(DISPLAY_NAME)), phone, phonefull, id, "", false);
                                         contacts.add(con);
@@ -703,6 +772,37 @@ public class Navigation extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
+    public void onActivityResult(int request_Code, int resultCode, Intent data) {
+        if (requestCode == request_Code) {
+            if (resultCode == RESULT_OK) {
+                String phone = data.getStringExtra("phone");
+               // Log.e(TAG, "Yes  !!!!!!  " + phone);
+                //TODO send permissionRequest
+//                if (PhoneNumberUtils.isGlobalPhoneNumber(phone) & phone.length() > 10) {
+//
+//                    phone = phone.substring(phone.length() - 10, phone.length());
+//
+//                }
+
+
+                phone =  FixPhoneNumber.FixPhoneNumber(this,phone);
+                SharedPref2 sharedPref2 = new SharedPref2();
+                String MyPhone = FixPhoneNumber.FixPhoneNumber(this,sharedPref2.GetPref(SharedPref2.APP_PREFERENCES_PHONE  ));
+                String Myid = sharedPref2.GetPref(SharedPref2.APP_PREFERENCES_FBID  );
+//                if (PhoneNumberUtils.isGlobalPhoneNumber(MyPhone) & MyPhone.length() > 10) {
+//
+//                    MyPhone = MyPhone.substring(MyPhone.length() - 10, MyPhone.length());
+//
+//                }
+
+                UserListener userListener= new UserListener(this);
+                userListener.SendPermissionRequest(Myid,MyPhone,phone);
+
+            }
+        }
+    }
+
+
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
@@ -714,8 +814,20 @@ public class Navigation extends AppCompatActivity
         CurrentCont = getMenuItemTag(item);
         if (CurrentCont.equals( AddNewContact)) {
             //TODO открыть меню со всеми контактами . отправить в ФБ. Написать функцию создания закрытого раздела в базе. Настроить мониторинг своего раздела базы на получение запроса. Получать локации только из списка разрешенных контактов.
+            Intent intent = new Intent(this, GetContact.class);
 
+            intent.putExtra("com.example.yan_c_000.auth.Contact", cont);
+
+            startActivityForResult(intent,requestCode);
         }
+        else if (CurrentCont.equals( IncomingPermissions)) {
+             Intent intent = new Intent(this, GetContact.class);
+
+            intent.putExtra("com.example.yan_c_000.auth.Contact", Permissions);
+
+            startActivityForResult(intent,requestCode);
+        }
+
         else {
             item.setChecked(true);
 
