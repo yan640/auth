@@ -51,8 +51,15 @@ public class RemoteToLocalLoader {
         if (context instanceof Callback) {
             this.callback = (Callback) context;
         }
+        SharedPref2 sharedPref2 = new SharedPref2();
+        sharedPref2.GetPref(SharedPref2.APP_PREFERENCES_PHONE);
+
+
+        String phone = sharedPref2.GetPref(SharedPref2.APP_PREFERENCES_PHONE);
+        String userId = sharedPref2.GetPref(SharedPref2.APP_PREFERENCES_FBID);
         mFirebaseInstance = FirebaseDatabase.getInstance();
-        mFirebaseDatabase = mFirebaseInstance.getReference("user");
+        mFirebaseDatabase = mFirebaseInstance.getReference("AcessGranted/"+userId);
+        LocalRealmDB.CreateContact(context, phone, "My Locations", userId);
 
         Load( );
 
