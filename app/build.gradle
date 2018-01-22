@@ -6,12 +6,12 @@ android {
     compileSdkVersion 26
     buildToolsVersion '26.0.2'
     defaultConfig {
-        applicationId "com.example.yan_c_000.auth"
+        applicationId "com.metty.yan_c_000.auth"
         minSdkVersion 17
         targetSdkVersion 26
-        versionCode 1
-        versionName "1.0"
+        versionName '1.001'
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        versionCode 2
     }
     buildTypes {
         release {
@@ -46,10 +46,8 @@ dependencies {
     compile 'io.michaelrocks:libphonenumber-android:8.8.5'
     // recycler view
     implementation 'com.android.support:recyclerview-v7:26.1.0'
-
     // glide image library
     implementation 'com.github.bumptech.glide:glide:4.3.1'
-
     // volley http library
     implementation 'com.android.volley:volley:1.0.0'
     annotationProcessor 'com.google.dagger:dagger-compiler:2.13'

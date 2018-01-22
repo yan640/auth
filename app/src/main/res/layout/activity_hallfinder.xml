@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.yan_c_000.auth.Hallfinder">
+    tools:context="com.metty.yan_c_000.auth.Hallfinder">
 
     <TextView
         android:id="@+id/textView"

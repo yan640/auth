@@ -1,4 +1,4 @@
-package com.example.yan_c_000.auth;
+package com.metty.yan_c_000.auth;
 
 import android.support.test.rule.ActivityTestRule;
 
